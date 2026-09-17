@@ -1,0 +1,31 @@
+{
+  "sites": [
+    {
+      "key": "baidu_short",
+      "name": "百度短劇",
+      "type": 3,
+      "api": "./百度短劇.js",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "taiyi",
+      "name": "太乙影視",
+      "type": 3,
+      "api": "./太乙影視.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "libvio",
+      "name": "Libvio影視",
+      "type": 3,
+      "api": "./Libvio影視.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }
+  ]
+}
