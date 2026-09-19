@@ -131,7 +131,7 @@ class Spider(Spider):
         d = self._router("/detail?series_id=" + quote(sid))
         s = ((d.get("loaderData") or {}).get("detail_page") or {}).get("seriesDetail") or {}
         vids = s.get("vid_list") or []
-        eps = "#".join("第%d集$hgvid:%s" % (i+1, v) for i,v in enumerate(vids))
+        eps = "#".join("第%d集$hgplay:%s:%d:%s" % (i+1, sid, i+1, v) for i,v in enumerate(vids))
         actors = ",".join(str(x.get("nickname") or "") for x in (s.get("celebrities") or []) if x.get("nickname"))
         vod = {
             "vod_id": sid,
@@ -150,7 +150,66 @@ class Spider(Spider):
         rows = ((d.get("loaderData") or {}).get("search_(keyword)/page") or {}).get("searchList") or []
         return {"list":[self._item(x) for x in rows]}
 
+    def _find_key(self, obj, key):
+        if isinstance(obj, dict):
+            if key in obj:
+                return obj.get(key)
+            for v in obj.values():
+                got = self._find_key(v, key)
+                if got not in (None, "", [], {}):
+                    return got
+        elif isinstance(obj, list):
+            for v in obj:
+                got = self._find_key(v, key)
+                if got not in (None, "", [], {}):
+                    return got
+        return None
+
     def playerContent(self, flag, id, vipFlags):
-        # 官網 SSR 只公開到每集 vid；現有公開實作的播放端依賴簽名+CENC 解密 bridge。
-        # 不在這裡繞過受保護播放機制。
-        return {"parse":0, "playUrl":"", "url":"toast://已取得紅果集數；此版本尚未提供受保護影片播放"}
+        try:
+            raw = str(id or "")
+            if not raw.startswith("hgplay:"):
+                return {"parse":0, "playUrl":"", "url":"toast://紅果播放參數格式錯誤"}
+
+            _, sid, idx, vid = raw.split(":", 3)
+            idx = int(idx or 1)
+
+            # 官網規則：第1集 /player/{series_id}；
+            # 其餘集數 /player/{series_id}/{vid}
+            if idx == 1:
+                path = "/player/" + quote(sid)
+            else:
+                path = "/player/" + quote(sid) + "/" + quote(vid)
+
+            d = self._router(path)
+
+            # 公開播放頁 SSR 的 video_player_info.main_url
+            info = self._find_key(d, "video_player_info")
+            play = ""
+            if isinstance(info, dict):
+                play = str(info.get("main_url") or "")
+
+            # 頁面結構改動時，仍嘗試尋找 main_url。
+            if not play:
+                got = self._find_key(d, "main_url")
+                if isinstance(got, str):
+                    play = got
+
+            if not play:
+                return {
+                    "parse":0,
+                    "playUrl":"",
+                    "url":"toast://此集目前不是紅果官網公開可播放集數，或播放網址取得失敗"
+                }
+
+            # 不送第三方 Referer；直接交給 WebHTV 播放時效 CDN MP4。
+            return {
+                "parse":0,
+                "playUrl":"",
+                "url":play,
+                "header":{
+                    "User-Agent":self.header.get("User-Agent", "")
+                }
+            }
+        except Exception:
+            return {"parse":0, "playUrl":"", "url":"toast://紅果播放資料解析失敗"}
