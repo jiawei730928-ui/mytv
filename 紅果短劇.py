@@ -2,8 +2,8 @@
 """
 紅果短劇（官網資料版）- WebHTV / FongMi T3 Python Spider
 資料來源：https://hongguoduanju.com 公開 SSR 頁面
-功能：首頁、分類、篩選、搜尋、詳情、集數
-說明：官網可公開取得片單與每集 vid；實際影片播放另有受保護播放鏈，這版不繞過簽名/CENC。
+功能：首頁、分類、篩選、搜尋、詳情、集數、官網公開集數播放
+說明：片單/詳情取自官網公開 SSR；播放只讀官網公開 player 頁提供的 main_url，不處理鎖定/付費/受保護集數。
 """
 import sys, json, re
 from urllib.parse import quote, urlencode
@@ -99,7 +99,11 @@ class Spider(Spider):
             {"type_id":"male","type_name":"男頻"},
             {"type_id":"female","type_name":"女頻"},
         ]
-        out = {"class": classes}
+        # WebHTV 某些版本首頁只讀 homeContent() 的 list，
+        # 因此推薦片單直接一併放進來；仍保留 homeVideoContent() 相容其他殼。
+        d = self._router("/category?tab=1&sort_type=2")
+        rows = ((d.get("loaderData") or {}).get("category_page") or {}).get("recommendList") or []
+        out = {"class": classes, "list": [self._item(x) for x in rows[:20]]}
         if filter:
             out["filters"] = {c["type_id"]: self._filters() for c in classes}
         return out
@@ -111,20 +115,46 @@ class Spider(Spider):
 
     def categoryContent(self, tid, pg, filter, extend):
         q = {"tab":"1", "sort_type":"1"}
-        if tid == "latest": q["sort_type"] = "2"
-        elif tid == "male": q["gender"] = "1"
-        elif tid == "female": q["gender"] = "2"
-        for k,v in (extend or {}).items():
+        if tid == "latest":
+            q["sort_type"] = "2"
+        elif tid == "hot":
+            q["sort_type"] = "1"
+        elif tid == "male":
+            q["gender"] = "1"
+        elif tid == "female":
+            q["gender"] = "2"
+
+        # WebHTV/FongMi 可能把 extend 傳成 dict，也可能傳 JSON 字串。
+        # 舊版直接 .items()，遇到字串時分類頁會整頁空白。
+        ext = extend or {}
+        if isinstance(ext, str):
+            try:
+                ext = json.loads(ext) if ext.strip() else {}
+            except Exception:
+                ext = {}
+        if not isinstance(ext, dict):
+            ext = {}
+        for k, v in ext.items():
             if v not in ("", "all", "0", None):
                 q[k] = str(v)
+
         try:
-            p = int(pg or 1)
+            p = max(1, int(pg or 1))
         except Exception:
             p = 1
-        if p > 1: q["page"] = str(p)
+        if p > 1:
+            q["page"] = str(p)
+
         d = self._router("/category?" + urlencode(q))
         rows = ((d.get("loaderData") or {}).get("category_page") or {}).get("recommendList") or []
-        return {"list":[self._item(x) for x in rows], "page":p, "pagecount":999, "limit":20, "total":9999}
+        videos = [self._item(x) for x in rows]
+        return {
+            "list": videos,
+            "page": p,
+            "pagecount": (p + 1) if videos else p,
+            "limit": len(videos) or 20,
+            "total": (p * max(len(videos), 20)) if videos else 0
+        }
 
     def detailContent(self, ids):
         sid = str(ids[0] if isinstance(ids, list) else ids)
