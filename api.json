@@ -132,6 +132,15 @@
     "漫剧",
     "短剧"
   ]
+    },
+    {
+  "key": "ruyi",
+  "name": "☁️如意｜AI漫劇補源",
+  "type": 1,
+  "api": "https://cj.rycjapi.com/api.php/provide/vod/",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 0
 }
   ]
 }
