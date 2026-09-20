@@ -101,6 +101,21 @@
     "漫剧",
     "爽文短剧"
   ]
+},
+    {
+  "key": "feifan",
+  "name": "🥗非凡｜國漫·動漫",
+  "type": 1,
+  "api": "https://yonghu.ffzyapi8.com/api.php/provide/vod/from/ffm3u8/at/json/",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 0,
+  "categories": [
+    "国产动漫",
+    "日韩动漫",
+    "欧美动漫",
+    "短剧"
+  ]
 }
   ]
 }
