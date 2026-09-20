@@ -69,6 +69,38 @@
     "AI漫剧",
     "短剧"
   ]
+},
+    {
+  "key": "baofeng",
+  "name": "🌪️暴風｜國漫·AI漫劇",
+  "type": 1,
+  "api": "https://bfzyapi.com/api.php/provide/vod/",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 0,
+  "categories": [
+    "国产动漫",
+    "日韩动漫",
+    "欧美动漫",
+    "AI漫剧",
+    "短剧大全"
+  ]
+},
+{
+  "key": "suoni",
+  "name": "🎞️索尼｜國漫·漫劇",
+  "type": 1,
+  "api": "https://suoniapi.com/api.php/provide/vod/",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 0,
+  "categories": [
+    "国产动漫",
+    "日韩动漫",
+    "欧美动漫",
+    "漫剧",
+    "爽文短剧"
+  ]
 }
   ]
 }
