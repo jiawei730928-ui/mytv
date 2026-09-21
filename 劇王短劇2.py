@@ -204,13 +204,56 @@ class Spider(Spider):
 
         return out
 
+    def _indexed_seed(self):
+        # 已確認仍存在的公開作品頁；用途只是突破首頁/列表入口。
+        # 進入頁面後再從站內「最新更新/相關作品」反推出更多作品。
+        seeds = ["9222", "11174", "7122"]
+        out, seen = [], set()
+        for vid in seeds:
+            html = self._get(f"{self.site}/play/{vid}.html")
+            if not html:
+                continue
+            soup = BeautifulSoup(html, "html.parser")
+
+            # 先加入 seed 自己
+            title = ""
+            h1 = soup.find("h1")
+            if h1:
+                title = self._clean(h1.get_text(" ", strip=True))
+                title = re.sub(r"\s*第0*1集.*$", "", title)
+            if title and vid not in seen:
+                seen.add(vid)
+                out.append({"vod_id":vid,"vod_name":title,"vod_pic":"","vod_remarks":""})
+
+            # 再抓頁內所有其他作品的第一集連結
+            for a in soup.find_all("a", href=True):
+                href=a.get("href","")
+                m=re.search(r"/play/(\d+)\.html(?:\?|$)",href)
+                if not m:
+                    continue
+                x=m.group(1)
+                if x in seen:
+                    continue
+                img=a.find("img")
+                name=a.get("title") or (img.get("alt") if img else "") or self._clean(a.get_text(" ",strip=True))
+                name=re.sub(r"\s*第0*1集.*$","",name).strip()
+                if not name or name.isdigit():
+                    continue
+                pic=""
+                if img:
+                    pic=img.get("data-src") or img.get("data-original") or img.get("src") or ""
+                    pic=urljoin(self.site,pic)
+                seen.add(x)
+                out.append({"vod_id":x,"vod_name":name,"vod_pic":pic,"vod_remarks":""})
+        return out
+
     def homeVideoContent(self):
-        for url in self._list_candidates("最新", 1, False):
-            html = self._get(url)
-            videos = self._extract_any_cards(html)
+        # 先正常列表；若站方挡列表请求，则改走仍存活的公开作品页。
+        for url in self._list_candidates("最新",1,False):
+            videos=self._extract_any_cards(self._get(url))
             if videos:
-                return {"list": videos[:30]}
-        return {"list": []}
+                return {"list":videos[:40]}
+        return {"list":self._indexed_seed()[:40]}
 
     def categoryContent(self, tid, pg, filter, extend):
         try:
@@ -224,6 +267,10 @@ class Spider(Spider):
             videos = self._extract_any_cards(html)
             if videos:
                 break
+
+        # 第1頁若被列表入口擋住，至少從公開作品頁反推站內作品。
+        if not videos and page == 1 and tid == "最新":
+            videos = self._indexed_seed()
 
         return {
             "list": videos,
