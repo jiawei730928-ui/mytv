@@ -42,6 +42,14 @@ class Spider(Spider):
                     seen.add(href); classes.append({"type_id":href,"type_name":name})
                     if len(classes)>=30: break
         except Exception as e: print("homeContent:",e)
+        if not classes:
+            # 只做分類入口備援；影片/詳情/播放仍全部沿用原版邏輯
+            for name in ["全部","都市","逆袭","重生","穿越","甜宠","萌宝","古装","悬疑"]:
+                if name == "全部":
+                    href = self.site + "/all/"
+                else:
+                    href = self.site + "/search/" + quote(name) + "/"
+                classes.append({"type_id":href,"type_name":name})
         return {"class":classes}
     def homeVideoContent(self): return {"list":[]}
     def categoryContent(self,tid,pg,filter,extend):
@@ -52,49 +60,23 @@ class Spider(Spider):
             if not base.startswith("http"): base=self.site+(base if base.startswith("/") else "/"+base)
             if not base.endswith("/"): base+="/"
 
-            # 第一頁完全沿用原版（已知可正常取得影片）
+            # 第一頁100%照原版。
             if page == 1:
-                url = base
+                videos=self._items(self._get(base))
             else:
-                # 劇王的分類網址不一定接受硬拼 page/N/。
-                # 從第一頁開始，實際讀取網頁上的「下一頁」href，逐頁走到指定頁。
-                url = base
-                for _ in range(1, page):
-                    html_now = self._get(url)
-                    doc_now = BeautifulSoup(html_now, "html.parser")
-                    next_url = ""
-
-                    # rel=next 優先
-                    a_next = doc_now.find("a", attrs={"rel":"next"})
-                    if a_next and a_next.get("href"):
-                        next_url = a_next.get("href")
-
-                    # 再找文字/符號型下一頁
-                    if not next_url:
-                        for a in doc_now.find_all("a", href=True):
-                            txt = a.get_text(" ", strip=True)
-                            cls = " ".join(a.get("class", []))
-                            if txt in ("下一页","下一頁","下页","下頁","›","»",">") or "next" in cls.lower():
-                                next_url = a.get("href")
-                                break
-
-                    # 再找頁碼 = 目前頁+1
-                    if not next_url:
-                        target = str(_ + 1)
-                        for a in doc_now.find_all("a", href=True):
-                            if a.get_text(strip=True) == target:
-                                next_url = a.get("href")
-                                break
-
-                    if not next_url:
-                        url = ""
-                        break
-                    if next_url.startswith("//"): next_url = "https:" + next_url
-                    elif next_url.startswith("/"): next_url = self.site + next_url
-                    elif not next_url.startswith("http"): next_url = base + next_url
-                    url = next_url
-
-            videos=self._items(self._get(url)) if url else []
+                videos=[]
+                # 分頁只做備援嘗試，不影響第一頁。
+                candidates=[
+                    base+"page/%d/"%page,
+                    base.rstrip("/")+"/%d/"%page,
+                    base+("?page=%d"%page),
+                    base+("?paged=%d"%page)
+                ]
+                for url in candidates:
+                    try:
+                        videos=self._items(self._get(url))
+                        if videos: break
+                    except: pass
         except Exception as e: print("categoryContent:",e); videos=[]
         return {"list":videos,"page":page,"pagecount":page+(1 if videos else 0),"limit":len(videos) or 20,"total":(page+1)*(len(videos) or 20)}
     def detailContent(self,ids):
