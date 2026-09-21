@@ -64,6 +64,15 @@
     "filterable": 1
   },
     {
+  "key": "juwang_2",
+  "name": "🧪劇王短劇2",
+  "type": 3,
+  "api": "./劇王短劇2.py",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 1
+},
+    {
   "key": "liangzi",
   "name": "⚛️量子｜國漫·AI漫劇",
   "type": 1,
