@@ -2,22 +2,13 @@
   "sites": [
     {
       "key": "baidu_short",
-      "name": "百度短劇",
+      "name": "🎭百度短劇",
       "type": 3,
-      "api": "./百度短劇.js",
+      "api": "./百度短劇.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
     },
-    {
-  "key": "baidu_short_2",
-  "name": "🧪百度短劇2",
-  "type": 3,
-  "api": "./百度短劇2.py",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0
-},
     {
       "key": "taiyi",
       "name": "太乙影視",
@@ -46,119 +37,103 @@
       "filterable": 1
     },
     {
-  "key": "hema",
-  "name": "🦛河馬短劇",
-  "type": 3,
-  "api": "./河馬短劇.py",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 1
+      "key": "hema",
+      "name": "🦛河馬短劇",
+      "type": 3,
+      "api": "./河馬短劇.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
     },
     {
-    "key": "juwang",
-    "name": "👑劇王短劇",
-    "type": 3,
-    "api": "./劇王短劇.py",
-    "searchable": 1,
-    "quickSearch": 1,
-    "filterable": 1
-  },
-    {
-  "key": "juwang_2",
-  "name": "🧪劇王短劇2",
-  "type": 3,
-  "api": "./劇王短劇2.py",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 1
-},
-    {
-  "key": "liangzi",
-  "name": "⚛️量子｜國漫·AI漫劇",
-  "type": 1,
-  "api": "https://cj.lziapi.com/api.php/provide/vod",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0,
-  "categories": [
-    "国产动漫",
-    "日韩动漫",
-    "欧美动漫",
-    "AI漫剧",
-    "短剧"
-  ]
-},
-    {
-  "key": "baofeng",
-  "name": "🌪️暴風｜國漫·AI漫劇",
-  "type": 1,
-  "api": "https://bfzyapi.com/api.php/provide/vod/",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0,
-  "categories": [
-    "国产动漫",
-    "日韩动漫",
-    "欧美动漫",
-    "AI漫剧",
-    "短剧大全"
-  ]
-},
-{
-  "key": "suoni",
-  "name": "🎞️索尼｜國漫·漫劇",
-  "type": 1,
-  "api": "https://suoniapi.com/api.php/provide/vod/",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0,
-  "categories": [
-    "国产动漫",
-    "日韩动漫",
-    "欧美动漫",
-    "漫剧",
-    "爽文短剧"
-  ]
-},
-    {
-  "key": "feifan",
-  "name": "🥗非凡｜國漫·動漫",
-  "type": 1,
-  "api": "https://yonghu.ffzyapi8.com/api.php/provide/vod/from/ffm3u8/at/json/",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0,
-  "categories": [
-    "国产动漫",
-    "日韩动漫",
-    "欧美动漫",
-    "短剧"
-  ]
+      "key": "liangzi",
+      "name": "⚛️量子｜國漫·AI漫劇",
+      "type": 1,
+      "api": "https://cj.lziapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
     },
     {
-  "key": "wujin",
-  "name": "🐝無盡｜國漫·漫劇",
-  "type": 1,
-  "api": "https://api.wujinapi.com/api.php/provide/vod/",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0,
-  "categories": [
-    "国产动漫",
-    "日韩动漫",
-    "欧美动漫",
-    "漫剧",
-    "短剧"
-  ]
+      "key": "baofeng",
+      "name": "🌪️暴風｜國漫·AI漫劇",
+      "type": 1,
+      "api": "https://bfzyapi.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
     },
     {
-  "key": "ruyi",
-  "name": "☁️如意｜AI漫劇補源",
-  "type": 1,
-  "api": "https://cj.rycjapi.com/api.php/provide/vod/",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 0
-}
+      "key": "suoni",
+      "name": "🎞️索尼｜國漫·漫劇",
+      "type": 1,
+      "api": "https://suoniapi.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "feifan",
+      "name": "🥗非凡｜國漫·動漫",
+      "type": 1,
+      "api": "https://yonghu.ffzyapi8.com/api.php/provide/vod/from/ffm3u8/at/json/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "wujin",
+      "name": "🐝無盡｜國漫·漫劇",
+      "type": 1,
+      "api": "https://api.wujinapi.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "ruyi",
+      "name": "☁️如意｜AI漫劇補源",
+      "type": 1,
+      "api": "https://cj.rycjapi.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "subo_test",
+      "name": "🧪🚀速播｜待測",
+      "type": 1,
+      "api": "https://subocj.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "haohua_test",
+      "name": "🧪🔥豪華｜待測",
+      "type": 1,
+      "api": "https://hhzyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "jisu_test",
+      "name": "🧪⚡極速｜待測",
+      "type": 1,
+      "api": "https://jszyapi.com/api.php/provide/vod",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "modu_test",
+      "name": "🧪🏙️魔都｜待測",
+      "type": 1,
+      "api": "https://www.mdzyapi.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    }
   ]
 }
