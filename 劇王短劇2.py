@@ -42,14 +42,6 @@ class Spider(Spider):
                     seen.add(href); classes.append({"type_id":href,"type_name":name})
                     if len(classes)>=30: break
         except Exception as e: print("homeContent:",e)
-        if not classes:
-            # 只做分類入口備援；影片/詳情/播放仍全部沿用原版邏輯
-            for name in ["全部","都市","逆袭","重生","穿越","甜宠","萌宝","古装","悬疑"]:
-                if name == "全部":
-                    href = self.site + "/all/"
-                else:
-                    href = self.site + "/search/" + quote(name) + "/"
-                classes.append({"type_id":href,"type_name":name})
         return {"class":classes}
     def homeVideoContent(self): return {"list":[]}
     def categoryContent(self,tid,pg,filter,extend):
@@ -60,25 +52,31 @@ class Spider(Spider):
             if not base.startswith("http"): base=self.site+(base if base.startswith("/") else "/"+base)
             if not base.endswith("/"): base+="/"
 
-            # 第一頁100%照原版。
+            # 第一頁完全不碰：沿用原版已驗證的網址。
             if page == 1:
-                videos=self._items(self._get(base))
+                videos = self._items(self._get(base))
             else:
-                videos=[]
-                # 分頁只做備援嘗試，不影響第一頁。
-                candidates=[
-                    base+"page/%d/"%page,
-                    base.rstrip("/")+"/%d/"%page,
-                    base+("?page=%d"%page),
-                    base+("?paged=%d"%page)
+                videos = []
+                # 先沿用原版 page/N/
+                candidates = [base+"page/%d/"%page]
+
+                # 再試網站常見的 query pagination，不改分類本身。
+                sep = "&" if "?" in base else "?"
+                candidates += [
+                    base + sep + "page=%d"%page,
+                    base + sep + "paged=%d"%page,
+                    base.rstrip("/") + "/%d/"%page
                 ]
                 for url in candidates:
                     try:
-                        videos=self._items(self._get(url))
-                        if videos: break
-                    except: pass
+                        got = self._items(self._get(url))
+                        if got:
+                            videos = got
+                            break
+                    except Exception:
+                        pass
         except Exception as e: print("categoryContent:",e); videos=[]
-        return {"list":videos,"page":page,"pagecount":page+(1 if videos else 0),"limit":len(videos) or 20,"total":(page+1)*(len(videos) or 20)}
+        return {"list":videos,"page":page,"pagecount":999 if videos else page,"limit":len(videos) or 20,"total":999*(len(videos) or 20)}
     def detailContent(self,ids):
         did=str(ids[0])
         try:
