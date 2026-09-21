@@ -9,7 +9,7 @@ except ImportError:
 
 class Spider(Spider):
     def __init__(self):
-        self.site="https://djw1.com"
+        self.site="https://taijuwang.com"
         self.headers={"User-Agent":"Mozilla/5.0 (Linux; Android 12; TV) AppleWebKit/537.36 Chrome/120 Safari/537.36","Referer":self.site+"/"}
     def getName(self): return "劇王短劇2"
     def init(self,extend=""): pass
@@ -18,7 +18,18 @@ class Spider(Spider):
     def destroy(self): pass
     def _get(self,url):
         if not str(url).startswith("http"): url=self.site+(url if str(url).startswith("/") else "/"+str(url))
-        r=requests.get(url,headers=self.headers,timeout=12); r.raise_for_status(); r.encoding="utf-8"; return r.text
+        r=requests.get(url,headers=self.headers,timeout=15,allow_redirects=True)
+        r.raise_for_status()
+        # 站方換域名時，自動跟著最後實際網域走，避免圖片/分頁仍拼舊站。
+        try:
+            from urllib.parse import urlsplit
+            u=urlsplit(r.url)
+            if u.scheme and u.netloc:
+                self.site=u.scheme+"://"+u.netloc
+                self.headers["Referer"]=self.site+"/"
+        except: pass
+        r.encoding="utf-8"
+        return r.text
     def _items(self,html):
         doc=BeautifulSoup(html,"html.parser"); out=[]; seen=set()
         for li in doc.select("section.container.items li"):
@@ -51,32 +62,22 @@ class Spider(Spider):
             base=str(tid)
             if not base.startswith("http"): base=self.site+(base if base.startswith("/") else "/"+base)
             if not base.endswith("/"): base+="/"
-
-            # 第一頁完全不碰：沿用原版已驗證的網址。
-            if page == 1:
-                videos = self._items(self._get(base))
+            if page==1:
+                videos=self._items(self._get(base))
             else:
-                videos = []
-                # 先沿用原版 page/N/
-                candidates = [base+"page/%d/"%page]
-
-                # 再試網站常見的 query pagination，不改分類本身。
-                sep = "&" if "?" in base else "?"
-                candidates += [
-                    base + sep + "page=%d"%page,
-                    base + sep + "paged=%d"%page,
-                    base.rstrip("/") + "/%d/"%page
-                ]
-                for url in candidates:
+                videos=[]
+                for url in [
+                    base+"page/%d/"%page,
+                    base.rstrip("/")+"/page/%d"%page,
+                    base+("?page=%d"%page),
+                    base+("?paged=%d"%page)
+                ]:
                     try:
-                        got = self._items(self._get(url))
-                        if got:
-                            videos = got
-                            break
-                    except Exception:
-                        pass
+                        videos=self._items(self._get(url))
+                        if videos: break
+                    except: pass
         except Exception as e: print("categoryContent:",e); videos=[]
-        return {"list":videos,"page":page,"pagecount":999 if videos else page,"limit":len(videos) or 20,"total":999*(len(videos) or 20)}
+        return {"list":videos,"page":page,"pagecount":page+(1 if videos else 0),"limit":len(videos) or 20,"total":(page+1)*(len(videos) or 20)}
     def detailContent(self,ids):
         did=str(ids[0])
         try:
