@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+import time
+import hashlib
 import requests
 
 try:
@@ -78,7 +80,10 @@ class Spider(Spider):
         sub = tid if tid in ["新剧", "限时免费", "精选", "独播"] else "新剧"
         topic = "" if tid in ["全部", "全部题材", "新剧", "限时免费", "精选", "独播"] else tid
 
-        import time
+        # 百度原版的 version 不是固定 v2，而是 timestamp + v2 的 MD5
+        timestamp = int(time.time())
+        version = hashlib.md5((str(timestamp) + "v2").encode("utf-8")).hexdigest()
+
         payload = {
             "data": json.dumps({
                 "data": {
@@ -89,8 +94,8 @@ class Spider(Spider):
                     "refreshIndex": page,
                     "cursor": "",
                     "theme": "",
-                    "timestamp": int(time.time()),
-                    "version": "v2",
+                    "timestamp": timestamp,
+                    "version": version,
                     "themes": [
                         {"kind": "综合", "names": [sub]},
                         {"kind": "题材", "names": [topic]}
