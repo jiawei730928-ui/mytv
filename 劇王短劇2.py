@@ -115,13 +115,101 @@ class Spider(Spider):
         ]
         return {"class": [{"type_id": x, "type_name": x} for x in names]}
 
+    def _list_candidates(self, tid="", page=1, search=False):
+        """
+        劇王站型曾出現多種 WordPress/偽靜態路由。
+        不再只押一種 /all/page/N/，依序試公開常見入口；
+        哪一條真的回作品就用哪一條。
+        """
+        urls = []
+        if search:
+            q = quote(str(tid))
+            urls += [
+                f"{self.site}/search/{q}/page/{page}/",
+                f"{self.site}/search/{q}/{page}/",
+                f"{self.site}/?s={q}&paged={page}",
+                f"{self.site}/?s={q}",
+            ]
+        elif tid and tid != "最新":
+            q = quote(str(tid))
+            urls += [
+                f"{self.site}/search/{q}/page/{page}/",
+                f"{self.site}/?s={q}&paged={page}",
+                f"{self.site}/tag/{q}/page/{page}/",
+                f"{self.site}/category/{q}/page/{page}/",
+            ]
+        else:
+            urls += [
+                f"{self.site}/page/{page}/",
+                f"{self.site}/all/page/{page}/",
+                f"{self.site}/all/{page}/",
+                f"{self.site}/?paged={page}",
+            ]
+            if page == 1:
+                urls += [self.site + "/", self.site + "/all/"]
+        return urls
+
+    def _extract_any_cards(self, html):
+        # 先用原卡片解析
+        videos = self._cards(html)
+        if videos:
+            return videos
+
+        # 再從整頁 HTML 直接找作品ID/標題，不依賴 DOM class
+        soup = BeautifulSoup(html, "html.parser")
+        out, seen = [], set()
+
+        for a in soup.find_all("a", href=True):
+            href = a.get("href", "")
+            # 劇王目前作品第一集常直接是 /play/ID.html
+            m = re.search(r"/play/(\d+)\.html(?:\?|$)", href)
+            if not m:
+                m = re.search(r"/(?:detail|vod|show)/(\d+)\.html(?:\?|$)", href)
+            if not m:
+                continue
+
+            vid = m.group(1)
+            if vid in seen:
+                continue
+
+            title = a.get("title") or ""
+            img = a.find("img")
+            if not title and img:
+                title = img.get("alt") or ""
+            if not title:
+                title = self._clean(a.get_text(" ", strip=True))
+
+            # 有些卡片標題在父層
+            if len(title) < 2:
+                par = a.parent
+                if par:
+                    title = self._clean(par.get_text(" ", strip=True))
+
+            title = re.sub(r"\s*第0*1集.*$", "", title).strip()
+            if not title or title.isdigit():
+                continue
+
+            pic = ""
+            if img:
+                pic = img.get("data-src") or img.get("data-original") or img.get("src") or ""
+                pic = urljoin(self.site, pic)
+
+            seen.add(vid)
+            out.append({
+                "vod_id": vid,
+                "vod_name": title,
+                "vod_pic": pic,
+                "vod_remarks": ""
+            })
+
+        return out
+
     def homeVideoContent(self):
-        # 舊 /all/ 若改版，首頁也作備援
-        for url in (self.site + "/all/", self.site + "/"):
+        for url in self._list_candidates("最新", 1, False):
             html = self._get(url)
-            videos = self._cards(html)
+            videos = self._extract_any_cards(html)
             if videos:
-                return {"list": videos[:20]}
+                return {"list": videos[:30]}
         return {"list": []}
 
     def categoryContent(self, tid, pg, filter, extend):
@@ -130,26 +218,10 @@ class Spider(Spider):
         except Exception:
             page = 1
 
-        # 劇王搜尋目前仍是公開路由；拿標籤做分類查詢，比綁死舊 /all/ DOM 穩
-        if tid == "最新":
-            urls = [
-                f"{self.site}/all/page/{page}/",
-                f"{self.site}/all/{page}/",
-                self.site + "/all/" if page == 1 else ""
-            ]
-        else:
-            q = quote(str(tid))
-            urls = [
-                f"{self.site}/search/{q}/page/{page}/",
-                f"{self.site}/search/{q}/{page}/"
-            ]
-
         videos = []
-        for url in urls:
-            if not url:
-                continue
+        for url in self._list_candidates(tid, page, False):
             html = self._get(url)
-            videos = self._cards(html)
+            videos = self._extract_any_cards(html)
             if videos:
                 break
 
@@ -169,16 +241,14 @@ class Spider(Spider):
             page = max(1, int(pg or 1))
         except Exception:
             page = 1
-        q = quote(str(key))
-        urls = [
-            f"{self.site}/search/{q}/page/{page}/",
-            f"{self.site}/search/{q}/{page}/"
-        ]
+
         videos = []
-        for url in urls:
-            videos = self._cards(self._get(url))
+        for url in self._list_candidates(key, page, True):
+            html = self._get(url)
+            videos = self._extract_any_cards(html)
             if videos:
                 break
+
         return {
             "list": videos,
             "page": page,
