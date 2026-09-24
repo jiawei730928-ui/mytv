@@ -10,15 +10,6 @@
       "filterable": 0
     },
     {
-  "key": "hongguo_fix",
-  "name": "🍅紅果短劇-修",
-  "type": 3,
-  "api": "./红果短剧-修.py",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 1
-    },
-    {
       "key": "taiyi",
       "name": "太乙影視",
       "type": 3,
@@ -53,33 +44,6 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
-    },
-    {
-      "key": "huaju_test",
-      "name": "🧪華劇｜待測",
-      "type": 3,
-      "api": "./華劇.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
-    },
-    {
-      "key": "miaoyingtan_test",
-      "name": "🧪妙影壇｜待測",
-      "type": 3,
-      "api": "./妙影壇.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
-    },
-    {
-      "key": "duanjuting_test",
-      "name": "🧪短劇亭｜待測",
-      "type": 3,
-      "api": "./短劇亭.py",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
     },
     {
       "key": "liangzi",
