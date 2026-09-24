@@ -10,15 +10,6 @@
       "filterable": 0
     },
     {
-  "key": "360duanju",
-  "name": "🎭360短劇",
-  "type": 1,
-  "api": "https://360zyzz.com/api.php/provide/vod",
-  "searchable": 1,
-  "quickSearch": 1,
-  "changeable": 1
-},
-    {
       "key": "taiyi",
       "name": "太乙影視",
       "type": 3,
@@ -61,7 +52,20 @@
       "api": "https://cj.lziapi.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日韩动漫",
+        "短剧",
+        "AI漫剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "baofeng",
@@ -70,7 +74,21 @@
       "api": "https://bfzyapi.com/api.php/provide/vod/",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日本动漫",
+        "欧美动漫",
+        "短剧大全",
+        "AI漫剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "suoni",
@@ -79,7 +97,27 @@
       "api": "https://suoniapi.com/api.php/provide/vod/",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日韩动漫",
+        "爽文短剧",
+        "女频恋爱",
+        "反转爽剧",
+        "古装仙侠",
+        "年代穿越",
+        "脑洞悬疑",
+        "现代都市",
+        "漫剧",
+        "有声动漫",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "feifan",
@@ -88,7 +126,22 @@
       "api": "https://yonghu.ffzyapi8.com/api.php/provide/vod/from/ffm3u8/at/json/",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日韩动漫",
+        "欧美动漫",
+        "港台动漫",
+        "海外动漫",
+        "短剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "wujin",
@@ -97,7 +150,27 @@
       "api": "https://api.wujinapi.com/api.php/provide/vod/",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日韩动漫",
+        "短剧",
+        "有声动漫",
+        "女频恋爱",
+        "反转爽剧",
+        "脑洞悬疑",
+        "年代穿越",
+        "古装仙侠",
+        "现代都市",
+        "漫剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "ruyi",
@@ -106,7 +179,19 @@
       "api": "https://cj.rycjapi.com/api.php/provide/vod/",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日韩动漫",
+        "短剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "subo_test",
@@ -115,7 +200,29 @@
       "api": "https://subocj.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "大陆剧",
+        "中国动漫",
+        "日本动漫",
+        "欧美动漫",
+        "古装仙侠",
+        "现代都市",
+        "穿越年代",
+        "言情总裁",
+        "重生民国",
+        "反转爽剧",
+        "脑洞悬疑",
+        "AI漫剧",
+        "动作片",
+        "爱情片",
+        "科幻片",
+        "战争片",
+        "剧情片",
+        "恐怖片",
+        "喜剧片",
+        "动漫电影"
+      ]
     },
     {
       "key": "haohua_test",
@@ -124,7 +231,26 @@
       "api": "https://hhzyapi.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "内地剧",
+        "中国动漫",
+        "日本动漫",
+        "古装仙侠",
+        "现代都市",
+        "穿越年代",
+        "言情总裁",
+        "重生民国",
+        "反转爽剧",
+        "脑洞悬疑",
+        "AI漫剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "jisu_test",
@@ -133,7 +259,19 @@
       "api": "https://jszyapi.com/api.php/provide/vod",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "内地剧",
+        "中国动漫",
+        "日本动漫",
+        "短剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     },
     {
       "key": "modu_test",
@@ -142,7 +280,19 @@
       "api": "https://www.mdzyapi.com/api.php/provide/vod/",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 0
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "短剧",
+        "AI漫剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "恐怖片",
+        "剧情片"
+      ]
     }
   ]
 }
