@@ -10,6 +10,15 @@
       "filterable": 0
     },
     {
+  "key": "360duanju",
+  "name": "🎭360短劇",
+  "type": 1,
+  "api": "https://360zyzz.com/api.php/provide/vod",
+  "searchable": 1,
+  "quickSearch": 1,
+  "changeable": 1
+},
+    {
       "key": "taiyi",
       "name": "太乙影視",
       "type": 3,
