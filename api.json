@@ -293,6 +293,51 @@
         "恐怖片",
         "剧情片"
       ]
+    },
+    {
+      "key": "zy360_test",
+      "name": "🧪🌀360資源｜待測",
+      "type": 1,
+      "api": "https://360zyzz.com/api.php/provide/vod/from/360zy",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "kanju19_test",
+      "name": "🧪🤖看劇AI19｜待測",
+      "type": 3,
+      "api": "./看劇AI19.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "feitu_test",
+      "name": "🧪🐇飛兔｜國漫·短劇｜待測",
+      "type": 3,
+      "api": "./飛兔影視.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "duanju_lite_test",
+      "name": "🧪🎭短劇聚合Lite｜待測",
+      "type": 3,
+      "api": "./短劇聚合Lite.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "juxiafan4k_test",
+      "name": "🧪🍚劇下飯4K｜短劇·AI漫劇｜待測",
+      "type": 3,
+      "api": "https://raw.githubusercontent.com/jie20091116/cat/main/TVBOX/PY/juxiafan4K.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
     }
   ]
 }
