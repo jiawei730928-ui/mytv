@@ -478,22 +478,36 @@ class Spider(Spider):
                 if not title:
                     continue
 
-                pic = x.get('pic') or {}
-                if isinstance(pic, dict):
-                    cover = (
-                        pic.get('large')
-                        or pic.get('normal')
-                        or pic.get('small')
-                        or ''
-                    )
-                else:
-                    cover = str(pic or '')
+                # 豆瓣榜單欄位並不完全一致：
+                # 電視劇/動漫常用 pic；電影榜不少項目直接放 cover_url。
+                cover = str(x.get('cover_url') or '').strip()
+                if not cover:
+                    pic = x.get('pic') or {}
+                    if isinstance(pic, dict):
+                        cover = (
+                            pic.get('large')
+                            or pic.get('normal')
+                            or pic.get('small')
+                            or pic.get('url')
+                            or ''
+                        )
+                    else:
+                        cover = str(pic or '')
 
-                # 2026-09-26 愛米3修正重點
-                if movie_only:
-                    cover = self._movie_pic(cover)
-                else:
-                    cover = self._douban_pic(cover)
+                if not cover:
+                    c2 = x.get('cover') or {}
+                    if isinstance(c2, dict):
+                        cover = (
+                            c2.get('url')
+                            or c2.get('large')
+                            or c2.get('normal')
+                            or ''
+                        )
+                    else:
+                        cover = str(c2 or '')
+
+                # 電影與電視劇/動漫統一使用已在愛米3成功的豆瓣圖片 header 方式。
+                cover = self._douban_pic(cover)
 
                 rating = x.get('rating') or {}
                 score = rating.get('value') if isinstance(rating, dict) else ''
