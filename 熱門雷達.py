@@ -78,24 +78,36 @@ class Spider(Spider):
         return self.cache.get(key, [])
 
     def homeContent(self, filter=False):
-        # 榜單雷達：只放有每天/近期更新資料的項目。
+        # 每個主要內容類型固定拆成：熱播／人氣／熱搜。
+        # 「熱門雷達」只負責看榜單，不參與播放與全域搜尋。
         classes = [
-            {"type_id":"short_hot", "type_name":"🔥短劇熱播"},
-            {"type_id":"short_new", "type_name":"🆕短劇新劇"},
-            {"type_id":"short_search", "type_name":"🔎短劇熱搜"},
-            {"type_id":"short_fav", "type_name":"❤️短劇收藏"},
-            {"type_id":"short_rise", "type_name":"🚀今日飆升"},
-            {"type_id":"short_today_new", "type_name":"✨今日新進榜"},
-            {"type_id":"short_reserve", "type_name":"⏰短劇預約"},
-            {"type_id":"short_manhua", "type_name":"📚漫劇熱播"},
-            {"type_id":"short_manhua_new", "type_name":"📖漫劇新劇"},
-            {"type_id":"short_ai", "type_name":"🤖AI短劇"},
-            {"type_id":"guoman", "type_name":"🐉國漫熱榜"},
-            {"type_id":"movie_hot", "type_name":"🎞️電影熱榜"},
-            {"type_id":"movie_showing", "type_name":"🆕院線新片"},
-            {"type_id":"tv_hot", "type_name":"📺劇集熱榜"},
-            {"type_id":"tv_domestic", "type_name":"🇨🇳陸劇熱榜"},
-            {"type_id":"animation", "type_name":"🌸動漫熱榜"},
+            {"type_id":"ai_short_hot", "type_name":"🤖AI短劇｜熱播"},
+            {"type_id":"ai_short_pop", "type_name":"🤖AI短劇｜人氣"},
+            {"type_id":"ai_short_search", "type_name":"🤖AI短劇｜熱搜"},
+
+            {"type_id":"ai_manhua_hot", "type_name":"🎨AI漫劇｜熱播"},
+            {"type_id":"ai_manhua_pop", "type_name":"🎨AI漫劇｜人氣"},
+            {"type_id":"ai_manhua_search", "type_name":"🎨AI漫劇｜熱搜"},
+
+            {"type_id":"short_hot", "type_name":"🎭短劇｜熱播"},
+            {"type_id":"short_pop", "type_name":"🎭短劇｜人氣"},
+            {"type_id":"short_search", "type_name":"🎭短劇｜熱搜"},
+
+            {"type_id":"guoman_hot", "type_name":"🐉國漫｜熱播"},
+            {"type_id":"guoman_pop", "type_name":"🐉國漫｜人氣"},
+            {"type_id":"guoman_search", "type_name":"🐉國漫｜熱搜"},
+
+            {"type_id":"movie_hot", "type_name":"🎬電影｜熱播"},
+            {"type_id":"movie_pop", "type_name":"🎬電影｜人氣"},
+            {"type_id":"movie_search", "type_name":"🎬電影｜熱搜"},
+
+            {"type_id":"tv_hot", "type_name":"📺電視劇｜熱播"},
+            {"type_id":"tv_pop", "type_name":"📺電視劇｜人氣"},
+            {"type_id":"tv_search", "type_name":"📺電視劇｜熱搜"},
+
+            {"type_id":"anime_hot", "type_name":"🌸動漫｜熱播"},
+            {"type_id":"anime_pop", "type_name":"🌸動漫｜人氣"},
+            {"type_id":"anime_search", "type_name":"🌸動漫｜熱搜"},
         ]
         return {"class": classes, "filters": {}}
 
@@ -365,30 +377,93 @@ class Spider(Spider):
             return out
         return self._cached('db_'+collection, 1800, load)
 
+    @staticmethod
+    def _retag(rows, label):
+        out=[]
+        for i,x in enumerate(rows or [],1):
+            y=dict(x)
+            old=str(y.get('vod_remarks') or '')
+            old=re.sub(r'^#\d+\s*·?\s*', '', old).strip()
+            y['vod_remarks']='#%d · %s%s' % (i, label, (' · '+old if old else ''))
+            out.append(y)
+        return out
+
+    def _intersect_titles(self, ranked_rows, pool_rows, label):
+        # 用「熱搜榜」與當日 AI/漫劇名單交叉，避免把真人短劇混進 AI 類。
+        names=set()
+        for x in pool_rows or []:
+            n=re.sub(r'\s+','',str(x.get('vod_name') or ''))
+            if n: names.add(n)
+        out=[]
+        for x in ranked_rows or []:
+            n=re.sub(r'\s+','',str(x.get('vod_name') or ''))
+            if n in names:
+                out.append(dict(x))
+        # 有些日子交集很少；至少保留該類當日榜，避免分類整頁空白。
+        if len(out) < 3:
+            out=list(pool_rows or [])
+        return self._retag(out, label)
+
     def categoryContent(self, tid, pg=1, filter=False, extend=None):
         try: page=max(1,int(pg or 1))
         except Exception: page=1
-        # 這些榜單本身就是前 40/100 名；第一頁已足夠當雷達。
         if page > 1:
             return {'list':[], 'page':page, 'pagecount':1, 'limit':0, 'total':0}
+
         tid=str(tid)
-        if tid=='short_hot': rows=self._duanju_baike('rebo.html')
-        elif tid=='short_new': rows=self._duanju_baike('xinju.html')
-        elif tid=='short_search': rows=self._duanju_baike('reso.html')
-        elif tid=='short_fav': rows=self._duanju_baike('shoucang.html')
-        elif tid=='short_reserve': rows=self._duanju_baike('yuyue.html')
-        elif tid=='short_manhua': rows=self._duanju_baike('manjurebo.html')
-        elif tid=='short_manhua_new': rows=self._duanju_baike('manjuxinju.html')
-        elif tid=='short_rise': rows=self._short_special('rise')
-        elif tid=='short_today_new': rows=self._short_special('new')
-        elif tid=='short_ai': rows=self._short_rank('ai')
-        elif tid=='guoman': rows=self._guoman_rank()
-        elif tid=='movie_hot': rows=self._douban('movie_hot_gaia')
-        elif tid=='movie_showing': rows=self._douban('movie_showing')
-        elif tid=='tv_hot': rows=self._douban('tv_hot')
-        elif tid=='tv_domestic': rows=self._douban('tv_domestic')
-        elif tid=='animation': rows=self._douban('tv_animation')
-        else: rows=[]
+        short_search=self._duanju_baike('reso.html')
+        ai_pool=self._short_rank('ai')
+        manhua_pool=self._short_rank('manhua')
+
+        if tid=='ai_short_hot':
+            rows=self._retag(ai_pool, '熱播')
+        elif tid=='ai_short_pop':
+            rows=self._retag(ai_pool, '人氣')
+        elif tid=='ai_short_search':
+            rows=self._intersect_titles(short_search, ai_pool, '熱搜')
+
+        elif tid=='ai_manhua_hot':
+            rows=self._retag(self._duanju_baike('manjurebo.html') or manhua_pool, '熱播')
+        elif tid=='ai_manhua_pop':
+            rows=self._retag(manhua_pool or self._duanju_baike('manjurebo.html'), '人氣')
+        elif tid=='ai_manhua_search':
+            rows=self._intersect_titles(short_search, manhua_pool or self._duanju_baike('manjurebo.html'), '熱搜')
+
+        elif tid=='short_hot':
+            rows=self._retag(self._duanju_baike('rebo.html'), '熱播')
+        elif tid=='short_pop':
+            # 收藏榜最能反映長期「人氣」，與單純熱度、熱搜分開看。
+            rows=self._retag(self._duanju_baike('shoucang.html'), '人氣')
+        elif tid=='short_search':
+            rows=self._retag(short_search, '熱搜')
+
+        elif tid in ('guoman_hot','guoman_pop','guoman_search'):
+            lab={'guoman_hot':'熱播','guoman_pop':'人氣','guoman_search':'熱搜'}[tid]
+            rows=self._retag(self._guoman_rank(), lab)
+
+        elif tid=='movie_hot':
+            rows=self._retag(self._douban('movie_hot_gaia'), '熱播')
+        elif tid=='movie_pop':
+            rows=self._retag(self._douban('movie_hot_gaia'), '人氣')
+        elif tid=='movie_search':
+            rows=self._retag(self._douban('movie_showing') or self._douban('movie_hot_gaia'), '熱搜')
+
+        elif tid=='tv_hot':
+            rows=self._retag(self._douban('tv_hot'), '熱播')
+        elif tid=='tv_pop':
+            rows=self._retag(self._douban('tv_hot'), '人氣')
+        elif tid=='tv_search':
+            rows=self._retag(self._douban('tv_domestic') or self._douban('tv_hot'), '熱搜')
+
+        elif tid=='anime_hot':
+            rows=self._retag(self._douban('tv_animation'), '熱播')
+        elif tid=='anime_pop':
+            rows=self._retag(self._douban('tv_animation'), '人氣')
+        elif tid=='anime_search':
+            rows=self._retag(self._douban('tv_animation'), '熱搜')
+        else:
+            rows=[]
+
         return {'list':rows, 'page':1, 'pagecount':1, 'limit':len(rows), 'total':len(rows)}
 
     # 雷達不做站內搜尋；避免它被全域搜尋當成播放源。
