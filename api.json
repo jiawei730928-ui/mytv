@@ -46,6 +46,15 @@
       "filterable": 1
     },
     {
+      "key": "hot_radar_test",
+      "name": "🧭熱門雷達｜待測",
+      "type": 3,
+      "api": "./熱門雷達.py",
+      "searchable": 0,
+      "quickSearch": 0,
+      "filterable": 0
+    },
+    {
       "key": "liangzi",
       "name": "⚛️量子｜國漫·AI漫劇",
       "type": 1,
