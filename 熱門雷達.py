@@ -110,6 +110,30 @@ class Spider(Spider):
                 u += '@User-Agent=%s@Referer=https://www.douban.com/' % IMG_UA
         return u
 
+
+    @staticmethod
+    def _movie_pic(url):
+        """
+        電影榜專用：
+        愛米3對部分豆瓣電影海報仍無法顯示，主要集中在 webp / 防盜鏈圖片。
+        這裡改走公開圖片代理並要求輸出 jpg，電視劇/動漫維持原本已成功方式。
+        """
+        u = str(url or '').strip()
+        if not u:
+            return ''
+        if u.startswith('//'):
+            u = 'https:' + u
+        elif u.startswith('http://'):
+            u = 'https://' + u[7:]
+
+        # 先把豆瓣 webp 改成 jpg，降低愛米3圖片解碼相容性問題。
+        u = re.sub(r'\.webp(?=($|\?))', '.jpg', u, flags=re.I)
+
+        # 豆瓣電影海報改走 weserv 圖片代理，輸出 jpeg。
+        if 'doubanio.com' in u or 'douban.com' in u:
+            return 'https://images.weserv.nl/?url=%s&output=jpg' % quote(u, safe='')
+        return u
+
     def homeContent(self, filter=False):
         classes = [
             {"type_id": "ai_short_hot",    "type_name": "🤖AI短劇｜熱播"},
@@ -404,7 +428,7 @@ class Spider(Spider):
             hmac.new(secret, raw.encode(), hashlib.sha1).digest()
         ).decode()
 
-    def _douban(self, collection):
+    def _douban(self, collection, movie_only=False):
         def load():
             path = '/subject_collection/%s/items' % collection
             ts = time.strftime('%Y%m%d')
@@ -466,7 +490,10 @@ class Spider(Spider):
                     cover = str(pic or '')
 
                 # 2026-09-26 愛米3修正重點
-                cover = self._douban_pic(cover)
+                if movie_only:
+                    cover = self._movie_pic(cover)
+                else:
+                    cover = self._douban_pic(cover)
 
                 rating = x.get('rating') or {}
                 score = rating.get('value') if isinstance(rating, dict) else ''
@@ -585,12 +612,12 @@ class Spider(Spider):
             rows = self._retag(self._guoman_rank(), lab)
 
         elif tid == 'movie_hot':
-            rows = self._retag(self._douban('movie_hot_gaia'), '熱播')
+            rows = self._retag(self._douban('movie_hot_gaia', movie_only=True), '熱播')
         elif tid == 'movie_pop':
-            rows = self._retag(self._douban('movie_hot_gaia'), '人氣')
+            rows = self._retag(self._douban('movie_hot_gaia', movie_only=True), '人氣')
         elif tid == 'movie_search':
             rows = self._retag(
-                self._douban('movie_showing') or self._douban('movie_hot_gaia'),
+                self._douban('movie_showing', movie_only=True) or self._douban('movie_hot_gaia', movie_only=True),
                 '熱搜'
             )
 
