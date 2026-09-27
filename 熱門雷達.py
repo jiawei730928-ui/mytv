@@ -3,15 +3,14 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-28 AI榜單語意修正版
+2026-09-27 第二層榜單＋底部翻頁修正版
 - 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
 - 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
 - 每個第二層最多 100 筆
 - 每頁 30 筆：1~30 / 31~60 / 61~90 / 91~100
 - 資料源不足 100 筆時顯示實際筆數，不硬湊
 - 保留愛米3已成功的豆瓣海報處理：cover_url -> pic -> cover + Header\n- 修正短劇工程 AI短劇 / AI漫劇部分封面抓不到的問題
-- AI短劇：移除沒有可靠獨立資料的熱搜/人氣，避免假榜
-- AI漫劇：人氣改為漫劇收藏數真實排序
+- AI短劇/AI漫劇：改成模糊標題交集，降低因括號/季數/簡繁造成的空榜
 - 國漫/動漫：移除需要 SESSDATA 的劇集索引，改用匿名公開排行榜 + 公開統計欄位
 - 熱搜若無真實片名命中，明確標示「熱搜參考」，避免空白也不假裝官方熱搜
 """
@@ -544,17 +543,16 @@ class Spider(Spider):
             {"n": "最近更新", "v": "update"},
             {"n": "飆升榜",   "v": "rising"},
         ]
-        # AI短劇目前沒有可靠、獨立且能穩定取得的「熱搜 / 人氣」榜。
-        # 依專案原則：沒有真榜就不硬開，避免看似有切換其實資料還是同一份。
+
+        # 只刪除愛米3已確認有問題的三個榜，不碰任何抓資料邏輯。
         ai_short_rank_values = [
             {"n": "熱播",     "v": "hot"},
             {"n": "最近更新", "v": "update"},
             {"n": "飆升榜",   "v": "rising"},
         ]
-        # AI漫劇「人氣」可直接用短劇百科漫劇頁的收藏數做真實排序。
         ai_manhua_rank_values = [
             {"n": "熱播",     "v": "hot"},
-            {"n": "人氣",     "v": "pop"},
+            {"n": "熱搜",     "v": "search"},
             {"n": "最近更新", "v": "update"},
             {"n": "飆升榜",   "v": "rising"},
         ]
@@ -563,10 +561,11 @@ class Spider(Spider):
         for c in classes:
             cid = c["type_id"]
             values = common_rank_values
-            if cid == 'ai_short':
+            if cid == "ai_short":
                 values = ai_short_rank_values
-            elif cid == 'ai_manhua':
+            elif cid == "ai_manhua":
                 values = ai_manhua_rank_values
+
             filters[cid] = [{
                 "key": "rank",
                 "name": "榜單",
@@ -987,9 +986,16 @@ class Spider(Spider):
         if tid == 'ai_short':
             if rank == 'hot':
                 return self._retag(ai_pool, '熱播')
-            if rank in ('search', 'pop'):
-                # 舊快取若仍帶 search/pop 進來，不再生成假榜；直接回熱播。
-                return self._retag(ai_pool, '熱播')
+            if rank == 'search':
+                real = self._strict_intersect(short_search, ai_pool, '熱搜')
+                filled = self._fill_distinct(real, ai_pool, '熱搜', min_items=30)
+                filled = self._borrow_pics(filled, ai_pool, short_search, short_hot)
+                return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '熱搜')
+            if rank == 'pop':
+                real = self._strict_intersect(short_pop, ai_pool, '人氣')
+                filled = self._fill_distinct(real, ai_pool, '人氣', min_items=30)
+                filled = self._borrow_pics(filled, ai_pool, short_pop, short_hot)
+                return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '人氣')
             if rank == 'update':
                 real = self._strict_intersect(short_new, ai_pool, '最近更新')
                 return self._fill_distinct(real, ai_pool, '最近更新')
@@ -1012,11 +1018,11 @@ class Spider(Spider):
                 real = self._strict_intersect(short_search, hot_pool, '熱搜')
                 return self._fill_distinct(real, manhua_daily, '熱搜')
             if rank == 'pop':
-                # 真實人氣定義：直接按漫劇頁「收藏數」降序，不再混入真人短劇收藏榜。
-                # 來源本身已有每部漫劇收藏數，這樣語意最乾淨，也會自然和熱播榜不同。
-                metric = self._sort_metric(hot_pool, '_fav', '人氣')
-                metric = self._borrow_pics(metric, hot_pool, manhua_daily)
-                return metric
+                real = self._strict_intersect(short_pop, hot_pool, '人氣')
+                metric = self._sort_metric(hot_pool, '_fav', '人氣參考')
+                filled = self._fill_distinct(real, metric or manhua_daily, '人氣', min_items=30)
+                filled = self._borrow_pics(filled, hot_pool, manhua_daily, short_pop)
+                return self._avoid_same(filled, self._retag(hot_pool, '熱播'), '人氣')
             if rank == 'update':
                 return self._fill_distinct(
                     self._retag(manhua_new, '最近更新'),
