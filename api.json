@@ -52,7 +52,7 @@
       "api": "./熱門雷達.py",
       "searchable": 0,
       "quickSearch": 0,
-      "filterable": 0
+      "filterable": 1
     },
     {
       "key": "liangzi",
@@ -72,7 +72,6 @@
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -88,14 +87,12 @@
         "国产剧",
         "国产动漫",
         "日本动漫",
-        "欧美动漫",
         "短剧大全",
         "AI漫剧",
         "动作片",
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -112,19 +109,12 @@
         "国产动漫",
         "日韩动漫",
         "爽文短剧",
-        "女频恋爱",
-        "反转爽剧",
-        "古装仙侠",
-        "年代穿越",
-        "脑洞悬疑",
-        "现代都市",
         "漫剧",
         "有声动漫",
         "动作片",
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -140,15 +130,11 @@
         "国产剧",
         "国产动漫",
         "日韩动漫",
-        "欧美动漫",
-        "港台动漫",
-        "海外动漫",
         "短剧",
         "动作片",
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -165,19 +151,12 @@
         "国产动漫",
         "日韩动漫",
         "短剧",
-        "有声动漫",
-        "女频恋爱",
-        "反转爽剧",
-        "脑洞悬疑",
-        "年代穿越",
-        "古装仙侠",
-        "现代都市",
         "漫剧",
+        "有声动漫",
         "动作片",
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -198,7 +177,6 @@
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -214,23 +192,16 @@
         "大陆剧",
         "中国动漫",
         "日本动漫",
-        "欧美动漫",
-        "古装仙侠",
+        "AI漫剧",
         "现代都市",
-        "穿越年代",
-        "言情总裁",
-        "重生民国",
+        "古装仙侠",
         "反转爽剧",
         "脑洞悬疑",
-        "AI漫剧",
         "动作片",
+        "喜剧片",
         "爱情片",
         "科幻片",
-        "战争片",
-        "剧情片",
-        "恐怖片",
-        "喜剧片",
-        "动漫电影"
+        "剧情片"
       ]
     },
     {
@@ -245,19 +216,15 @@
         "内地剧",
         "中国动漫",
         "日本动漫",
-        "古装仙侠",
+        "AI漫剧",
         "现代都市",
-        "穿越年代",
-        "言情总裁",
-        "重生民国",
+        "古装仙侠",
         "反转爽剧",
         "脑洞悬疑",
-        "AI漫剧",
         "动作片",
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -278,7 +245,6 @@
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -299,7 +265,6 @@
         "喜剧片",
         "爱情片",
         "科幻片",
-        "恐怖片",
         "剧情片"
       ]
     },
@@ -310,7 +275,19 @@
       "api": "https://360zyzz.com/api.php/provide/vod/from/360zy",
       "searchable": 1,
       "quickSearch": 1,
-      "filterable": 1
+      "filterable": 0,
+      "categories": [
+        "国产剧",
+        "国产动漫",
+        "日韩动漫",
+        "短剧",
+        "AI漫剧",
+        "动作片",
+        "喜剧片",
+        "爱情片",
+        "科幻片",
+        "剧情片"
+      ]
     },
     {
       "key": "kanju19_test",
@@ -344,6 +321,51 @@
       "name": "🧪🍚劇下飯4K｜短劇·AI漫劇｜待測",
       "type": 3,
       "api": "https://raw.githubusercontent.com/jie20091116/cat/main/TVBOX/PY/juxiafan4K.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "ecohub_test",
+      "name": "🧪🌟EcoHub影視｜待測",
+      "type": 3,
+      "api": "https://raw.githubusercontent.com/wliqi495-create/jaychouqq/c250e38babf68e0021d75e161c4312370c765bdc/yingshi/py9/EcoHub影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "imxvod_test",
+      "name": "🧪🎞️IMXVOD影視｜待測",
+      "type": 3,
+      "api": "https://raw.githubusercontent.com/wliqi495-create/jaychouqq/c250e38babf68e0021d75e161c4312370c765bdc/yingshi/py9/IMXVOD影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "dieka_test",
+      "name": "🧪🦋蝶卡影視｜待測",
+      "type": 3,
+      "api": "https://raw.githubusercontent.com/wliqi495-create/jaychouqq/c250e38babf68e0021d75e161c4312370c765bdc/yingshi/py9/蝶卡影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "fengshang_test",
+      "name": "🧪🎬風尚影視｜待測",
+      "type": 3,
+      "api": "https://raw.githubusercontent.com/phu889/kjh998/refs/heads/main/py/风尚影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "diyidongman_test",
+      "name": "🧪🌸第一動漫網｜待測",
+      "type": 3,
+      "api": "https://raw.githubusercontent.com/wliqi495-create/jaychouqq/c250e38babf68e0021d75e161c4312370c765bdc/yingshi/py9/第一动漫网.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
