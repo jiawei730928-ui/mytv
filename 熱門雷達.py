@@ -3,13 +3,14 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-27 實機修正版
+2026-09-27 第二層榜單實機修正版
 - 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
 - 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
 - 每個第二層最多 100 筆
 - 每頁 30 筆：1~30 / 31~60 / 61~90 / 91~100
 - 資料源不足 100 筆時顯示實際筆數，不硬湊
 - 保留愛米3已成功的豆瓣海報處理：cover_url -> pic -> cover + Header\n- 修正短劇工程 AI短劇 / AI漫劇部分封面抓不到的問題
+- AI短劇/AI漫劇/國漫/動漫改用不同真實榜單訊號，避免五個分類其實同一份資料
 """
 
 import sys, re, json, html, time, base64, hashlib, hmac
@@ -154,6 +155,187 @@ class Spider(Spider):
             out = list(pool_rows or [])
         return self._retag(self._unique(out), label)
 
+
+    def _strict_intersect(self, ranked_rows, pool_rows, label):
+        """只保留真的同時出現在兩個榜單的作品，不用同榜回填。"""
+        names = set()
+        for x in pool_rows or []:
+            n = re.sub(r'\s+', '', str(x.get('vod_name') or '')).lower()
+            if n:
+                names.add(n)
+        out = []
+        for x in ranked_rows or []:
+            n = re.sub(r'\s+', '', str(x.get('vod_name') or '')).lower()
+            if n and n in names:
+                out.append(dict(x))
+        return self._retag(self._unique(out), label)
+
+    def _sort_metric(self, rows, key, label):
+        rows = [dict(x) for x in (rows or [])]
+        rows.sort(key=lambda x: float(x.get(key) or 0), reverse=True)
+        return self._retag(self._unique(rows), label)
+
+    def _bili_index(self, season_type, order):
+        """
+        B站劇集索引真實排序：
+        order 0=更新時間、2=播放數、3=追番人數。
+        最多取100筆，接口失敗就回空。
+        """
+        ck = 'bili_index_%s_%s' % (season_type, order)
+
+        def load():
+            out, seen = [], set()
+            for page in range(1, 6):
+                u = (
+                    'https://api.bilibili.com/pgc/season/index/result'
+                    '?st={st}&season_type={st}&type=1&order={order}&sort=0'
+                    '&season_version=-1&is_finish=-1&copyright=-1'
+                    '&season_status=-1&year=-1&style_id=-1'
+                    '&page={page}&pagesize=20'
+                ).format(st=season_type, order=order, page=page)
+
+                r = self._get(u, headers={'Referer': 'https://www.bilibili.com/'})
+                if not r or getattr(r, 'status_code', 0) != 200:
+                    break
+                try:
+                    j = r.json()
+                except Exception:
+                    break
+
+                data = j.get('data') or j.get('result') or {}
+                rows = data.get('list') or []
+                if not rows:
+                    break
+
+                for x in rows:
+                    title = str(x.get('title') or '').strip()
+                    if not title:
+                        continue
+                    k = re.sub(r'\s+', '', title).lower()
+                    if k in seen:
+                        continue
+                    seen.add(k)
+
+                    pic = x.get('cover') or ((x.get('first_ep') or {}).get('cover')) or ''
+                    metric = str(x.get('order') or '').strip()
+                    ep = str(x.get('index_show') or '').strip()
+
+                    remark = '#%d' % (len(out) + 1)
+                    if metric:
+                        remark += ' · ' + metric
+                    if ep and ep not in metric:
+                        remark += ' · ' + ep
+
+                    sid = str(x.get('season_id') or x.get('media_id') or len(out) + 1)
+                    out.append({
+                        'vod_id': 'radar|bili|%s|%s' % (quote(title, safe=''), sid),
+                        'vod_name': title,
+                        'vod_pic': pic,
+                        'vod_remarks': remark
+                    })
+                    if len(out) >= MAX_ITEMS:
+                        return out
+
+                if not data.get('has_next'):
+                    break
+            return out
+
+        return self._cached(ck, 1800, load)
+
+    def _bili_recent_rank(self, season_type):
+        """B站近3日劇集排行，和總播放/追番是不同的近期訊號。"""
+        ck = 'bili_recent_%s' % season_type
+
+        def load():
+            u = 'https://api.bilibili.com/pgc/season/rank/web/list?day=3&season_type=%s' % season_type
+            r = self._get(u, headers={'Referer': 'https://www.bilibili.com/'})
+            if not r or getattr(r, 'status_code', 0) != 200:
+                return []
+            try:
+                j = r.json()
+            except Exception:
+                return []
+
+            data = j.get('result') or j.get('data') or {}
+            rows = data.get('list') or data.get('items') or []
+            out = []
+
+            for x in rows:
+                title = str(x.get('title') or x.get('name') or '').strip()
+                if not title:
+                    continue
+                pic = x.get('cover') or x.get('square_cover') or ''
+                ep = ((x.get('new_ep') or {}).get('index_show') or x.get('new_ep_index') or '')
+                view = ((x.get('stat') or {}).get('view') or '')
+
+                remark = '#%d' % (len(out) + 1)
+                if ep:
+                    remark += ' · ' + str(ep)
+                if view:
+                    try:
+                        n = int(view)
+                        if n >= 10000:
+                            remark += ' · %.1f萬播放' % (n / 10000.0)
+                    except Exception:
+                        pass
+
+                sid = str(x.get('season_id') or x.get('media_id') or len(out) + 1)
+                out.append({
+                    'vod_id': 'radar|bili|%s|%s' % (quote(title, safe=''), sid),
+                    'vod_name': title,
+                    'vod_pic': pic,
+                    'vod_remarks': remark
+                })
+                if len(out) >= MAX_ITEMS:
+                    break
+            return out
+
+        return self._cached(ck, 900, load)
+
+    def _bili_hotwords(self):
+        """B站公開即時熱搜詞。"""
+        def load():
+            r = self._get(
+                'https://s.search.bilibili.com/main/hotword',
+                headers={'Referer': 'https://www.bilibili.com/'}
+            )
+            if not r or getattr(r, 'status_code', 0) != 200:
+                return []
+            try:
+                j = r.json()
+            except Exception:
+                return []
+            out = []
+            for x in (j.get('list') or []):
+                w = str(x.get('keyword') or x.get('show_name') or '').strip()
+                if w:
+                    out.append(w)
+            return out
+        return self._cached('bili_hotwords', 600, load)
+
+    def _bili_search_rank(self, season_type, label='熱搜'):
+        """
+        B站熱搜詞與該類劇集池做標題交集。
+        沒命中就回空，不拿其它榜偽裝熱搜。
+        """
+        pool = self._unique(
+            self._bili_index(season_type, 2)
+            + self._bili_index(season_type, 3)
+            + self._bili_index(season_type, 0)
+            + self._bili_recent_rank(season_type),
+            MAX_ITEMS
+        )
+        words = [re.sub(r'\s+', '', w).lower() for w in self._bili_hotwords()]
+        if not words:
+            return []
+
+        out = []
+        for x in pool:
+            name = re.sub(r'\s+', '', str(x.get('vod_name') or '')).lower()
+            if any((w in name or name in w) for w in words if len(w) >= 2):
+                out.append(dict(x))
+        return self._retag(self._unique(out), label)
+
     # -------------------- 首頁：7 大類 + 第二層篩選 --------------------
     def homeContent(self, filter=False):
         classes = [
@@ -265,11 +447,25 @@ class Spider(Spider):
                     remark += ' · ' + ep
 
                 seen.add(href)
+                def _num_metric(pattern):
+                    mmx = re.search(pattern, clean, re.I)
+                    if not mmx:
+                        return 0.0
+                    try:
+                        n = float(mmx.group(1))
+                    except Exception:
+                        return 0.0
+                    unit = mmx.group(2) if mmx.lastindex and mmx.lastindex >= 2 else ''
+                    return n * (10000.0 if unit in ('万','萬') else 1.0)
+
                 out.append({
                     'vod_id': 'radar|short|%s|%s' % (quote(title, safe=''), quote(href, safe='')),
                     'vod_name': title,
                     'vod_pic': pic,
-                    'vod_remarks': remark
+                    'vod_remarks': remark,
+                    '_heat': _num_metric(r'(\d+(?:\.\d+)?)\s*([万萬]?)\s*(?:最高热度|最高熱度|热度|熱度)'),
+                    '_fav': _num_metric(r'(\d+(?:\.\d+)?)\s*([万萬]?)\s*收藏'),
+                    '_like': _num_metric(r'(\d+(?:\.\d+)?)\s*([万萬]?)\s*次?点赞')
                 })
 
                 if len(out) >= MAX_ITEMS:
@@ -571,33 +767,45 @@ class Spider(Spider):
         short_search = self._duanju_baike('reso.html')
         short_hot = self._duanju_baike('rebo.html')
         short_pop = self._duanju_baike('shoucang.html')
+        short_new = self._duanju_baike('xinju.html')
+        manhua_hot = self._duanju_baike('manjurebo.html')
+        manhua_new = self._duanju_baike('manjuxinju.html')
+
         daily_all = self._short_rank('all')
         ai_pool = self._short_rank('ai')
-        manhua_pool = self._short_rank('manhua')
+        manhua_daily = self._short_rank('manhua')
 
+        # AI短劇：不同真實榜單做交叉，不再五個都拿同一份 daily
         if tid == 'ai_short':
             if rank == 'hot':
                 return self._retag(ai_pool, '熱播')
             if rank == 'search':
-                return self._intersect_titles(short_search, ai_pool, '熱搜')
+                return self._strict_intersect(short_search, ai_pool, '熱搜')
             if rank == 'pop':
-                return self._retag(ai_pool, '人氣')
+                return self._strict_intersect(short_pop, ai_pool, '人氣')
             if rank == 'update':
-                return self._retag(ai_pool, '最近更新')
-            return self._intersect_titles(short_hot, ai_pool, '飆升榜')
+                return self._strict_intersect(short_new, ai_pool, '最近更新')
+            # 新劇榜 + AI日榜：新上架又有熱度，作為飆升候選
+            return self._strict_intersect(short_new, ai_pool, '飆升榜')
 
+        # AI漫劇：熱播與新劇都有短劇百科獨立榜；人氣按收藏數重排
         if tid == 'ai_manhua':
-            hot = self._duanju_baike('manjurebo.html') or manhua_pool
+            hot_pool = manhua_hot or manhua_daily
             if rank == 'hot':
-                return self._retag(hot, '熱播')
+                return self._retag(hot_pool, '熱播')
             if rank == 'search':
-                return self._intersect_titles(short_search, manhua_pool or hot, '熱搜')
+                return self._strict_intersect(short_search, hot_pool, '熱搜')
             if rank == 'pop':
-                return self._retag(manhua_pool or hot, '人氣')
+                return self._sort_metric(hot_pool, '_fav', '人氣')
             if rank == 'update':
-                return self._retag(manhua_pool or hot, '最近更新')
-            return self._intersect_titles(short_hot, manhua_pool or hot, '飆升榜')
+                return self._retag(manhua_new or manhua_daily, '最近更新')
+            return self._strict_intersect(
+                manhua_new or manhua_daily,
+                hot_pool,
+                '飆升榜'
+            )
 
+        # 真人短劇：熱播/熱搜/人氣/新劇都有獨立榜
         if tid == 'short':
             if rank == 'hot':
                 return self._retag(short_hot, '熱播')
@@ -606,20 +814,58 @@ class Spider(Spider):
             if rank == 'pop':
                 return self._retag(short_pop, '人氣')
             if rank == 'update':
-                return self._retag(daily_all or short_hot, '最近更新')
+                return self._retag(short_new or daily_all, '最近更新')
+            return self._strict_intersect(short_new or daily_all, short_hot, '飆升榜')
+
+        # 國漫：B站播放/追番/更新/近3日排行都是不同官方排序
+        if tid == 'guoman':
+            if rank == 'hot':
+                return self._retag(
+                    self._bili_index(4, 2) or self._guoman_rank(),
+                    '熱播'
+                )
+            if rank == 'search':
+                return self._bili_search_rank(4, '熱搜')
+            if rank == 'pop':
+                return self._retag(
+                    self._bili_index(4, 3) or self._guoman_rank(),
+                    '人氣'
+                )
+            if rank == 'update':
+                return self._retag(
+                    self._bili_index(4, 0) or self._guoman_rank(),
+                    '最近更新'
+                )
             return self._retag(
-                self._unique(short_search + short_hot)[:MAX_ITEMS],
+                self._bili_recent_rank(4) or self._guoman_rank(),
                 '飆升榜'
             )
 
-        if tid == 'guoman':
-            lab = {
-                'hot': '熱播', 'search': '熱搜', 'pop': '人氣',
-                'update': '最近更新', 'rising': '飆升榜'
-            }.get(rank, '熱播')
-            return self._retag(self._guoman_rank(), lab)
+        # 動漫：B站番劇取代豆瓣單一榜重複使用
+        if tid == 'anime':
+            if rank == 'hot':
+                return self._retag(
+                    self._bili_index(1, 2) or self._douban('tv_animation'),
+                    '熱播'
+                )
+            if rank == 'search':
+                return self._bili_search_rank(1, '熱搜')
+            if rank == 'pop':
+                return self._retag(
+                    self._bili_index(1, 3) or self._douban('tv_animation'),
+                    '人氣'
+                )
+            if rank == 'update':
+                return self._retag(
+                    self._bili_index(1, 0) or self._douban('tv_animation'),
+                    '最近更新'
+                )
+            return self._retag(
+                self._bili_recent_rank(1) or self._douban('tv_animation'),
+                '飆升榜'
+            )
 
-        # 豆瓣 collection：有獨立 collection 就分開，沒有就保持同類資料但不同標示。
+        # 電影 / 電視劇先維持上一版已實機有變化的豆瓣來源
         if tid == 'movie':
             coll = {
                 'hot': 'movie_hot_gaia',
@@ -636,8 +882,6 @@ class Spider(Spider):
                 'update': 'tv_domestic',
                 'rising': 'tv_hot'
             }.get(rank, 'tv_hot')
-        elif tid == 'anime':
-            coll = 'tv_animation'
         else:
             return []
 
