@@ -3,7 +3,7 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-27 第二層榜單＋底部翻頁修正版
+2026-09-28 AI短劇_AI漫劇真榜單修正版
 - 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
 - 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
 - 每個第二層最多 100 筆
@@ -775,11 +775,31 @@ class Spider(Spider):
                 if heat:
                     remark += ' · ' + heat
 
+                plain = self._txt(around)
+
+                # 短劇工程日榜「較前一日」
+                # 例：▲ 46 / ▼ 1 / 新
+                move = 0
+                mm = re.search(r'▲\s*(\d+)', plain)
+                if mm:
+                    try:
+                        move = int(mm.group(1))
+                    except Exception:
+                        move = 0
+
+                is_new = bool(
+                    re.search(r'(?:新上榜|較前一日\s*新|较前一日\s*新)', plain)
+                    or re.search(r'\b新\b', plain)
+                )
+
                 out.append({
                     'vod_id': 'radar|short|%s|%s' % (quote(title, safe=''), quote(href, safe='')),
                     'vod_name': title,
                     'vod_pic': pic,
                     'vod_remarks': remark,
+                    '_daily_rank': rank,
+                    '_move': move,
+                    '_is_new': 1 if is_new else 0,
                 })
 
                 if len(out) >= MAX_ITEMS:
@@ -985,64 +1005,66 @@ class Spider(Spider):
 
         if tid == 'ai_short':
             if rank == 'hot':
+                # 真正的 AI短劇日榜熱播順序
                 return self._retag(ai_pool, '熱播')
-            if rank == 'search':
-                real = self._strict_intersect(short_search, ai_pool, '熱搜')
-                filled = self._fill_distinct(real, ai_pool, '熱搜', min_items=30)
-                filled = self._borrow_pics(filled, ai_pool, short_search, short_hot)
-                return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '熱搜')
-            if rank == 'pop':
-                real = self._strict_intersect(short_pop, ai_pool, '人氣')
-                filled = self._fill_distinct(real, ai_pool, '人氣', min_items=30)
-                filled = self._borrow_pics(filled, ai_pool, short_pop, short_hot)
-                return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '人氣')
+
             if rank == 'update':
+                # 只取「短劇百科新劇榜」中同時屬於 AI短劇日榜的作品。
+                # 不再用 ai_pool 補滿，避免最後又和熱播看起來一樣。
                 real = self._strict_intersect(short_new, ai_pool, '最近更新')
-                return self._fill_distinct(real, ai_pool, '最近更新')
-            # 飆升：以「熱播榜順序」去挑新劇，和「最近更新的新劇順序」自然分開
-            rising = self._strict_intersect(short_hot, short_new, '飆升榜')
-            rising = self._strict_intersect(rising, ai_pool, '飆升榜')
-            filled = self._fill_distinct(rising, ai_pool[10:], '飆升榜')
-            update_ref = self._fill_distinct(
-                self._strict_intersect(short_new, ai_pool, '最近更新'),
-                ai_pool,
-                '最近更新'
+                real = self._borrow_pics(real, ai_pool, short_new)
+                return self._retag(self._unique(real), '最近更新')
+
+            # 飆升榜：直接使用短劇工程「較前一日 ▲N 名」。
+            # 只保留真正上升的作品，按上升名次由大到小。
+            rising = [dict(x) for x in ai_pool if int(x.get('_move') or 0) > 0]
+            rising.sort(
+                key=lambda x: (
+                    int(x.get('_move') or 0),
+                    -int(x.get('_daily_rank') or 999)
+                ),
+                reverse=True
             )
-            return self._avoid_same(filled, update_ref, '飆升榜')
+            for x in rising:
+                mv = int(x.get('_move') or 0)
+                if mv > 0:
+                    old = str(x.get('vod_remarks') or '')
+                    x['vod_remarks'] = old + (' · ▲%d' % mv)
+            return self._retag(self._unique(rising), '飆升榜')
 
         if tid == 'ai_manhua':
             hot_pool = manhua_hot or manhua_daily
+
             if rank == 'hot':
+                # 短劇百科「漫劇熱播榜」
                 return self._retag(hot_pool, '熱播')
+
             if rank == 'search':
+                # 這段維持原本邏輯，不動。
                 real = self._strict_intersect(short_search, hot_pool, '熱搜')
                 return self._fill_distinct(real, manhua_daily, '熱搜')
-            if rank == 'pop':
-                real = self._strict_intersect(short_pop, hot_pool, '人氣')
-                metric = self._sort_metric(hot_pool, '_fav', '人氣參考')
-                filled = self._fill_distinct(real, metric or manhua_daily, '人氣', min_items=30)
-                filled = self._borrow_pics(filled, hot_pool, manhua_daily, short_pop)
-                return self._avoid_same(filled, self._retag(hot_pool, '熱播'), '人氣')
+
             if rank == 'update':
-                return self._fill_distinct(
-                    self._retag(manhua_new, '最近更新'),
-                    manhua_daily,
-                    '最近更新'
-                )
-            # 熱播順序中挑出新劇；若仍與熱播太像，先拉開，再和最近更新比較一次
-            real = self._strict_intersect(hot_pool, manhua_new, '飆升榜')
-            filled = self._fill_distinct(real, hot_pool[10:], '飆升榜')
-            filled = self._avoid_same(
-                filled,
-                self._retag(hot_pool, '熱播'),
-                '飆升榜'
+                # 直接使用「漫劇新劇榜」。
+                # 不再以 manhua_daily 回填，避免最後變成熱播/日榜那一批。
+                rows = self._borrow_pics(manhua_new, hot_pool, manhua_daily)
+                return self._retag(self._unique(rows), '最近更新')
+
+            # 飆升榜：短劇工程日榜中「漫劇」較前一日 ▲N 名。
+            rising = [dict(x) for x in manhua_daily if int(x.get('_move') or 0) > 0]
+            rising.sort(
+                key=lambda x: (
+                    int(x.get('_move') or 0),
+                    -int(x.get('_daily_rank') or 999)
+                ),
+                reverse=True
             )
-            update_ref = self._fill_distinct(
-                self._retag(manhua_new, '最近更新'),
-                manhua_daily,
-                '最近更新'
-            )
-            return self._avoid_same(filled, update_ref, '飆升榜')
+            for x in rising:
+                mv = int(x.get('_move') or 0)
+                if mv > 0:
+                    old = str(x.get('vod_remarks') or '')
+                    x['vod_remarks'] = old + (' · ▲%d' % mv)
+            return self._retag(self._unique(rising), '飆升榜')
 
         if tid == 'short':
             if rank == 'hot':
