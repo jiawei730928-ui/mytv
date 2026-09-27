@@ -3,7 +3,7 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-27 第二層榜單自檢修正版
+2026-09-27 第二層榜單＋底部翻頁修正版
 - 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
 - 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
 - 每個第二層最多 100 筆
@@ -121,6 +121,9 @@ class Spider(Spider):
             y = dict(x)
             old = str(y.get('vod_remarks') or '')
             old = re.sub(r'^#\d+\s*·?\s*', '', old).strip()
+            label_pat = r'^(?:最近更新參考|熱搜參考|人氣參考|飆升參考|最近更新|飆升榜|熱播|熱搜|人氣)(?:\s*·\s*|\s*$)'
+            while old and re.match(label_pat, old):
+                old = re.sub(label_pat, '', old, count=1).strip()
             y['vod_remarks'] = '#%d · %s%s' % (
                 i, label, (' · ' + old if old else '')
             )
@@ -187,10 +190,28 @@ class Spider(Spider):
                 out.append(dict(x))
         return self._retag(self._unique(out), label)
 
-    def _fill_distinct(self, primary, fallback, label, min_items=12):
+    def _borrow_pics(self, rows, *sources):
+        pic_map = {}
+        for src in sources:
+            for x in src or []:
+                n = self._norm_title(x.get('vod_name'))
+                pic = str(x.get('vod_pic') or '').strip()
+                if n and pic and n not in pic_map:
+                    pic_map[n] = pic
+        out = []
+        for x in rows or []:
+            y = dict(x)
+            if not str(y.get('vod_pic') or '').strip():
+                n = self._norm_title(y.get('vod_name'))
+                if n in pic_map:
+                    y['vod_pic'] = pic_map[n]
+            out.append(y)
+        return out
+
+    def _fill_distinct(self, primary, fallback, label, min_items=30):
         """
-        真榜優先；不足時只用「另一個有意義的資料源」補位。
-        不會拿完全相同清單原封不動回填。
+        真榜優先；若真榜筆數不足，才用同類候選補到最多第一頁30筆。
+        補位不複製、不造假。
         """
         out = [dict(x) for x in (primary or [])]
         seen = {self._norm_title(x.get('vod_name')) for x in out}
@@ -203,6 +224,7 @@ class Spider(Spider):
                 seen.add(n)
                 if len(out) >= min_items:
                     break
+        out = self._borrow_pics(out, primary, fallback)
         return self._retag(self._unique(out), label)
 
     def _avoid_same(self, rows, reference_rows, label, compare_top=20):
@@ -946,11 +968,13 @@ class Spider(Spider):
                 return self._retag(ai_pool, '熱播')
             if rank == 'search':
                 real = self._strict_intersect(short_search, ai_pool, '熱搜')
-                filled = self._fill_distinct(real, self._strict_intersect(short_search, ai_pool[10:], '熱搜參考'), '熱搜')
+                filled = self._fill_distinct(real, ai_pool, '熱搜', min_items=30)
+                filled = self._borrow_pics(filled, ai_pool, short_search, short_hot)
                 return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '熱搜')
             if rank == 'pop':
                 real = self._strict_intersect(short_pop, ai_pool, '人氣')
-                filled = self._fill_distinct(real, self._strict_intersect(short_pop, ai_pool[10:], '人氣參考'), '人氣')
+                filled = self._fill_distinct(real, ai_pool, '人氣', min_items=30)
+                filled = self._borrow_pics(filled, ai_pool, short_pop, short_hot)
                 return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '人氣')
             if rank == 'update':
                 real = self._strict_intersect(short_new, ai_pool, '最近更新')
@@ -976,7 +1000,8 @@ class Spider(Spider):
             if rank == 'pop':
                 real = self._strict_intersect(short_pop, hot_pool, '人氣')
                 metric = self._sort_metric(hot_pool, '_fav', '人氣參考')
-                filled = self._fill_distinct(real, metric, '人氣')
+                filled = self._fill_distinct(real, metric or manhua_daily, '人氣', min_items=30)
+                filled = self._borrow_pics(filled, hot_pool, manhua_daily, short_pop)
                 return self._avoid_same(filled, self._retag(hot_pool, '熱播'), '人氣')
             if rank == 'update':
                 return self._fill_distinct(
@@ -1067,27 +1092,67 @@ class Spider(Spider):
 
     # -------------------- 分頁：每頁 30，最多 100 --------------------
     def categoryContent(self, tid, pg=1, filter=False, extend=None):
-        try:
-            page = max(1, int(pg or 1))
-        except Exception:
-            page = 1
-
+        raw_tid = str(tid or '')
         ext = extend if isinstance(extend, dict) else {}
         rank = str(ext.get('rank') or 'hot')
 
-        rows = self._unique(self._rows_for(str(tid), rank), MAX_ITEMS)
+        if raw_tid.startswith('radarnav|'):
+            parts = raw_tid.split('|')
+            if len(parts) >= 4:
+                raw_tid = parts[1]
+                rank = parts[2]
+                try:
+                    page = max(1, int(parts[3]))
+                except Exception:
+                    page = 1
+            else:
+                page = 1
+        else:
+            try:
+                page = max(1, int(pg or 1))
+            except Exception:
+                page = 1
+
+        rows = self._unique(self._rows_for(raw_tid, rank), MAX_ITEMS)
         total = min(len(rows), MAX_ITEMS)
         pagecount = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
-
         if page > pagecount:
-            page_rows = []
-        else:
-            start = (page - 1) * PAGE_SIZE
-            end = min(start + PAGE_SIZE, total)
-            page_rows = rows[start:end]
+            page = pagecount
+
+        start = (page - 1) * PAGE_SIZE
+        end = min(start + PAGE_SIZE, total)
+        page_rows = rows[start:end]
+
+        nav = []
+        if page > 1:
+            nav.append({
+                'vod_id': 'radarnav|%s|%s|1' % (raw_tid, rank),
+                'vod_name': '⏮ 回頁首',
+                'vod_pic': '',
+                'vod_tag': 'folder',
+                'vod_remarks': '第 1 / %d 頁' % pagecount,
+                'land': 1
+            })
+            nav.append({
+                'vod_id': 'radarnav|%s|%s|%d' % (raw_tid, rank, page - 1),
+                'vod_name': '◀ 上一頁',
+                'vod_pic': '',
+                'vod_tag': 'folder',
+                'vod_remarks': '第 %d / %d 頁' % (page - 1, pagecount),
+                'land': 1
+            })
+        if page < pagecount:
+            nav.append({
+                'vod_id': 'radarnav|%s|%s|%d' % (raw_tid, rank, page + 1),
+                'vod_name': '下一頁 ▶',
+                'vod_pic': '',
+                'vod_tag': 'folder',
+                'vod_remarks': '第 %d / %d 頁' % (page + 1, pagecount),
+                'land': 1
+            })
 
         return {
-            'list': page_rows,
+            'list': page_rows + nav,
             'page': page,
             'pagecount': pagecount,
             'limit': PAGE_SIZE,
@@ -1103,6 +1168,8 @@ class Spider(Spider):
 
     def detailContent(self, ids):
         raw = str(ids[0] if isinstance(ids, (list, tuple)) else ids or '')
+        if raw.startswith('radarnav|'):
+            return {'list': []}
         parts = raw.split('|')
         if len(parts) < 4:
             return {'list': []}
