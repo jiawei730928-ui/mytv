@@ -3,10 +3,13 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-26 修正版：
-- 保留 AI短劇 / AI漫劇 / 短劇 / 國漫 / 電影 / 電視劇 / 動漫，各自 熱播 / 人氣 / 熱搜。
-- 修正豆瓣電影、電視劇、動漫封面在愛米3只顯示彩色文字方塊的問題：
-  豆瓣圖片加入 WebHTV/TVBox 可辨識的 Referer + User-Agent 圖片請求資訊。
+2026-09-27 測試版
+- 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
+- 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
+- 每個第二層最多 100 筆
+- 每頁 30 筆：1~30 / 31~60 / 61~90 / 91~100
+- 資料源不足 100 筆時顯示實際筆數，不硬湊
+- 保留愛米3已成功的豆瓣海報處理：cover_url -> pic -> cover + Header
 """
 
 import sys, re, json, html, time, base64, hashlib, hmac
@@ -26,6 +29,9 @@ except Exception:
 
 UA = "Mozilla/5.0 (Linux; Android 12; TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 IMG_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+
+PAGE_SIZE = 30
+MAX_ITEMS = 100
 
 
 class Spider(Spider):
@@ -49,6 +55,9 @@ class Spider(Spider):
 
     def manualVideoCheck(self):
         return False
+
+    def localProxy(self, param):
+        return None
 
     # -------------------- 共用 --------------------
     def _get(self, url, headers=None, timeout=12):
@@ -80,7 +89,7 @@ class Spider(Spider):
             return self.cache[key]
         try:
             v = loader()
-            if v:
+            if v is not None:
                 self.cache[key] = v
                 self.cache_ts[key] = now
                 return v
@@ -90,12 +99,6 @@ class Spider(Spider):
 
     @staticmethod
     def _douban_pic(url):
-        """
-        愛米3目前能拿到豆瓣榜單文字，但豆瓣圖片直接連線時會被防盜鏈擋掉，
-        所以海報才退回成「第一個字」的彩色方塊。
-        TVBox/FongMi 圖片欄位支援 @Header=value 的寫法，
-        這裡只對豆瓣圖片加 Referer / User-Agent。
-        """
         u = str(url or '').strip()
         if not u:
             return ''
@@ -103,71 +106,86 @@ class Spider(Spider):
             u = 'https:' + u
         elif u.startswith('http://'):
             u = 'https://' + u[7:]
-
         if 'doubanio.com' in u or 'douban.com' in u:
-            # 已有 header 就不要重複疊加。
             if '@Referer=' not in u and '@User-Agent=' not in u:
                 u += '@User-Agent=%s@Referer=https://www.douban.com/' % IMG_UA
         return u
 
+    @staticmethod
+    def _retag(rows, label):
+        out = []
+        for i, x in enumerate(rows or [], 1):
+            y = dict(x)
+            old = str(y.get('vod_remarks') or '')
+            old = re.sub(r'^#\d+\s*·?\s*', '', old).strip()
+            y['vod_remarks'] = '#%d · %s%s' % (
+                i, label, (' · ' + old if old else '')
+            )
+            out.append(y)
+        return out
 
     @staticmethod
-    def _movie_pic(url):
-        """
-        電影榜專用：
-        愛米3對部分豆瓣電影海報仍無法顯示，主要集中在 webp / 防盜鏈圖片。
-        這裡改走公開圖片代理並要求輸出 jpg，電視劇/動漫維持原本已成功方式。
-        """
-        u = str(url or '').strip()
-        if not u:
-            return ''
-        if u.startswith('//'):
-            u = 'https:' + u
-        elif u.startswith('http://'):
-            u = 'https://' + u[7:]
+    def _unique(rows, limit=MAX_ITEMS):
+        out, seen = [], set()
+        for x in rows or []:
+            name = re.sub(r'\s+', '', str(x.get('vod_name') or '')).lower()
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            out.append(x)
+            if len(out) >= limit:
+                break
+        return out
 
-        # 先把豆瓣 webp 改成 jpg，降低愛米3圖片解碼相容性問題。
-        u = re.sub(r'\.webp(?=($|\?))', '.jpg', u, flags=re.I)
+    def _intersect_titles(self, ranked_rows, pool_rows, label):
+        names = set()
+        for x in pool_rows or []:
+            n = re.sub(r'\s+', '', str(x.get('vod_name') or '')).lower()
+            if n:
+                names.add(n)
 
-        # 豆瓣電影海報改走 weserv 圖片代理，輸出 jpeg。
-        if 'doubanio.com' in u or 'douban.com' in u:
-            return 'https://images.weserv.nl/?url=%s&output=jpg' % quote(u, safe='')
-        return u
+        out = []
+        for x in ranked_rows or []:
+            n = re.sub(r'\s+', '', str(x.get('vod_name') or '')).lower()
+            if n in names:
+                out.append(dict(x))
 
+        if len(out) < 3:
+            out = list(pool_rows or [])
+        return self._retag(self._unique(out), label)
+
+    # -------------------- 首頁：7 大類 + 第二層篩選 --------------------
     def homeContent(self, filter=False):
         classes = [
-            {"type_id": "ai_short_hot",    "type_name": "🤖AI短劇｜熱播"},
-            {"type_id": "ai_short_pop",    "type_name": "🤖AI短劇｜人氣"},
-            {"type_id": "ai_short_search", "type_name": "🤖AI短劇｜熱搜"},
-
-            {"type_id": "ai_manhua_hot",    "type_name": "🎨AI漫劇｜熱播"},
-            {"type_id": "ai_manhua_pop",    "type_name": "🎨AI漫劇｜人氣"},
-            {"type_id": "ai_manhua_search", "type_name": "🎨AI漫劇｜熱搜"},
-
-            {"type_id": "short_hot",    "type_name": "🎭短劇｜熱播"},
-            {"type_id": "short_pop",    "type_name": "🎭短劇｜人氣"},
-            {"type_id": "short_search", "type_name": "🎭短劇｜熱搜"},
-
-            {"type_id": "guoman_hot",    "type_name": "🐉國漫｜熱播"},
-            {"type_id": "guoman_pop",    "type_name": "🐉國漫｜人氣"},
-            {"type_id": "guoman_search", "type_name": "🐉國漫｜熱搜"},
-
-            {"type_id": "movie_hot",    "type_name": "🎬電影｜熱播"},
-            {"type_id": "movie_pop",    "type_name": "🎬電影｜人氣"},
-            {"type_id": "movie_search", "type_name": "🎬電影｜熱搜"},
-
-            {"type_id": "tv_hot",    "type_name": "📺電視劇｜熱播"},
-            {"type_id": "tv_pop",    "type_name": "📺電視劇｜人氣"},
-            {"type_id": "tv_search", "type_name": "📺電視劇｜熱搜"},
-
-            {"type_id": "anime_hot",    "type_name": "🌸動漫｜熱播"},
-            {"type_id": "anime_pop",    "type_name": "🌸動漫｜人氣"},
-            {"type_id": "anime_search", "type_name": "🌸動漫｜熱搜"},
+            {"type_id": "ai_short",  "type_name": "🤖AI短劇"},
+            {"type_id": "ai_manhua", "type_name": "🎨AI漫劇"},
+            {"type_id": "short",     "type_name": "🎭短劇"},
+            {"type_id": "guoman",    "type_name": "🐉國漫"},
+            {"type_id": "anime",     "type_name": "🌸動漫"},
+            {"type_id": "movie",     "type_name": "🎬電影"},
+            {"type_id": "tv",        "type_name": "📺電視劇"},
         ]
-        return {"class": classes, "filters": {}}
+
+        rank_values = [
+            {"n": "熱播",     "v": "hot"},
+            {"n": "熱搜",     "v": "search"},
+            {"n": "人氣",     "v": "pop"},
+            {"n": "最近更新", "v": "update"},
+            {"n": "飆升榜",   "v": "rising"},
+        ]
+
+        filters = {}
+        for c in classes:
+            filters[c["type_id"]] = [{
+                "key": "rank",
+                "name": "榜單",
+                "value": rank_values
+            }]
+
+        return {"class": classes, "filters": filters if filter else filters}
 
     def homeVideoContent(self):
-        return {"list": self._duanju_baike('rebo.html')[:30]}
+        return {"list": self._duanju_baike('rebo.html')[:PAGE_SIZE]}
 
     # -------------------- 短劇百科 --------------------
     def _duanju_baike(self, page):
@@ -199,8 +217,7 @@ class Spider(Spider):
                     continue
 
                 im = re.search(r'<img\b([^>]*)>', block, re.I | re.S)
-                pic = ''
-                title = ''
+                pic, title = '', ''
 
                 if im:
                     tag = im.group(1)
@@ -255,7 +272,7 @@ class Spider(Spider):
                     'vod_remarks': remark
                 })
 
-                if len(out) >= 100:
+                if len(out) >= MAX_ITEMS:
                     break
 
             return out
@@ -284,8 +301,7 @@ class Spider(Spider):
                     continue
 
                 block = m.group(4)
-                title = ''
-                pic = ''
+                title, pic = '', ''
 
                 im = re.search(r'<img\b([^>]*)>', block, re.I | re.S)
                 if im:
@@ -316,15 +332,6 @@ class Spider(Spider):
                 if hm:
                     heat = hm.group(1) + '萬'
 
-                if not pic:
-                    pre = text[max(0, m.start() - 650):m.start()]
-                    ims = list(re.finditer(r'<img\b([^>]*)>', pre, re.I | re.S))
-                    if ims:
-                        tag = ims[-1].group(1)
-                        pic = self._attr(tag, 'src') or self._attr(tag, 'data-src') or self._attr(tag, 'data-original')
-                        if not title:
-                            title = re.sub(r'封面$', '', self._attr(tag, 'alt')).strip()
-
                 if pic.startswith('//'):
                     pic = 'https:' + pic
                 elif pic.startswith('/'):
@@ -345,7 +352,7 @@ class Spider(Spider):
                     'vod_remarks': remark,
                 })
 
-                if len(out) >= 100:
+                if len(out) >= MAX_ITEMS:
                     break
 
             return out
@@ -366,10 +373,7 @@ class Spider(Spider):
     def _guoman_rank(self):
         def load():
             u = 'https://api.bilibili.com/pgc/season/rank/web/list?day=3&season_type=4'
-            r = self._get(
-                u,
-                headers={"Referer": "https://www.bilibili.com/v/popular/rank/guochuang"}
-            )
+            r = self._get(u, headers={"Referer": "https://www.bilibili.com/v/popular/rank/guochuang"})
             if not r or getattr(r, 'status_code', 0) != 200:
                 return []
 
@@ -386,15 +390,12 @@ class Spider(Spider):
                 title = str(x.get('title') or x.get('name') or '').strip()
                 if not title:
                     continue
-
                 pic = x.get('cover') or x.get('square_cover') or ''
                 ep = ((x.get('new_ep') or {}).get('index_show') or x.get('new_ep_index') or '')
                 view = ((x.get('stat') or {}).get('view') or '')
-
                 remark = '#%d' % i
                 if ep:
                     remark += ' · ' + str(ep)
-
                 if view:
                     try:
                         n = int(view)
@@ -402,16 +403,15 @@ class Spider(Spider):
                             remark += ' · %.1f萬播放' % (n / 10000.0)
                     except Exception:
                         pass
-
                 sid = str(x.get('season_id') or x.get('media_id') or i)
-
                 out.append({
                     'vod_id': 'radar|guoman|%s|%s' % (quote(title, safe=''), sid),
                     'vod_name': title,
                     'vod_pic': pic,
                     'vod_remarks': remark
                 })
-
+                if len(out) >= MAX_ITEMS:
+                    break
             return out
 
         return self._cached('guoman', 1800, load)
@@ -428,239 +428,226 @@ class Spider(Spider):
             hmac.new(secret, raw.encode(), hashlib.sha1).digest()
         ).decode()
 
-    def _douban(self, collection, movie_only=False):
+    def _douban(self, collection):
         def load():
             path = '/subject_collection/%s/items' % collection
-            ts = time.strftime('%Y%m%d')
-
-            params = {
-                'start': '0',
-                'count': '40',
-                'os_rom': 'android',
-                'apiKey': '0dad551ec0f84ed02907ff5c42e8ec70',
-                '_ts': ts,
-                '_sig': self._douban_sign(path, ts)
-            }
-
-            qs = '&'.join(
-                '%s=%s' % (quote(str(k), safe=''), quote(str(v), safe=''))
-                for k, v in params.items()
-            )
-
-            u = 'https://frodo.douban.com/api/v2' + path + '?' + qs
-
             hdr = {
                 'User-Agent': 'api-client/1 com.douban.frodo/7.22.0(231) Android/23 product/Mate40 vendor/HUAWEI model/Mate40 platform/mobile',
                 'Referer': 'https://m.douban.com/'
             }
 
-            r = self._get(u, headers=hdr)
+            out, seen = [], set()
 
-            if not r or getattr(r, 'status_code', 0) != 200:
-                u2 = (
-                    'https://m.douban.com/rexxar/api/v2/subject_collection/'
-                    '%s/items?start=0&count=40&for_mobile=1'
-                ) % collection
-                r = self._get(u2, headers={'Referer': 'https://m.douban.com/'})
+            # 0~39 / 40~79 / 80~99，最多 100 筆
+            for start in (0, 40, 80):
+                count = 40 if start < 80 else 20
+                ts = time.strftime('%Y%m%d')
+                params = {
+                    'start': str(start),
+                    'count': str(count),
+                    'os_rom': 'android',
+                    'apiKey': '0dad551ec0f84ed02907ff5c42e8ec70',
+                    '_ts': ts,
+                    '_sig': self._douban_sign(path, ts)
+                }
+                qs = '&'.join(
+                    '%s=%s' % (quote(str(k), safe=''), quote(str(v), safe=''))
+                    for k, v in params.items()
+                )
+                u = 'https://frodo.douban.com/api/v2' + path + '?' + qs
+                r = self._get(u, headers=hdr)
+
                 if not r or getattr(r, 'status_code', 0) != 200:
-                    return []
+                    u2 = (
+                        'https://m.douban.com/rexxar/api/v2/subject_collection/'
+                        '%s/items?start=%s&count=%s&for_mobile=1'
+                    ) % (collection, start, count)
+                    r = self._get(u2, headers={'Referer': 'https://m.douban.com/'})
+                    if not r or getattr(r, 'status_code', 0) != 200:
+                        break
 
-            try:
-                j = r.json()
-            except Exception:
-                return []
+                try:
+                    j = r.json()
+                except Exception:
+                    break
 
-            rows = j.get('subject_collection_items') or j.get('items') or []
-            out = []
+                rows = j.get('subject_collection_items') or j.get('items') or []
+                if not rows:
+                    break
 
-            for i, x in enumerate(rows, 1):
-                title = str(x.get('title') or x.get('name') or '').strip()
-                if not title:
-                    continue
+                for x in rows:
+                    title = str(x.get('title') or x.get('name') or '').strip()
+                    if not title:
+                        continue
 
-                # 豆瓣榜單欄位並不完全一致：
-                # 電視劇/動漫常用 pic；電影榜不少項目直接放 cover_url。
-                cover = str(x.get('cover_url') or '').strip()
-                if not cover:
-                    pic = x.get('pic') or {}
-                    if isinstance(pic, dict):
-                        cover = (
-                            pic.get('large')
-                            or pic.get('normal')
-                            or pic.get('small')
-                            or pic.get('url')
-                            or ''
-                        )
-                    else:
-                        cover = str(pic or '')
+                    key = re.sub(r'\s+', '', title).lower()
+                    if key in seen:
+                        continue
+                    seen.add(key)
 
-                if not cover:
-                    c2 = x.get('cover') or {}
-                    if isinstance(c2, dict):
-                        cover = (
-                            c2.get('url')
-                            or c2.get('large')
-                            or c2.get('normal')
-                            or ''
-                        )
-                    else:
-                        cover = str(c2 or '')
+                    # 愛米3已實機成功順序：cover_url -> pic -> cover
+                    cover = str(x.get('cover_url') or '').strip()
+                    if not cover:
+                        pic = x.get('pic') or {}
+                        if isinstance(pic, dict):
+                            cover = (
+                                pic.get('large') or pic.get('normal')
+                                or pic.get('small') or pic.get('url') or ''
+                            )
+                        else:
+                            cover = str(pic or '')
 
-                # 電影與電視劇/動漫統一使用已在愛米3成功的豆瓣圖片 header 方式。
-                cover = self._douban_pic(cover)
+                    if not cover:
+                        c2 = x.get('cover') or {}
+                        if isinstance(c2, dict):
+                            cover = (
+                                c2.get('url') or c2.get('large')
+                                or c2.get('normal') or ''
+                            )
+                        else:
+                            cover = str(c2 or '')
 
-                rating = x.get('rating') or {}
-                score = rating.get('value') if isinstance(rating, dict) else ''
-                sub = x.get('card_subtitle') or x.get('subtitle') or ''
+                    cover = self._douban_pic(cover)
 
-                remark = '#%d' % i
-                if score not in ('', None, 0, '0'):
-                    remark += ' · %s分' % score
-                elif sub:
-                    remark += ' · ' + str(sub)[:18]
+                    rating = x.get('rating') or {}
+                    score = rating.get('value') if isinstance(rating, dict) else ''
+                    sub = x.get('card_subtitle') or x.get('subtitle') or ''
 
-                did = str(x.get('id') or i)
+                    rank = len(out) + 1
+                    remark = '#%d' % rank
+                    if score not in ('', None, 0, '0'):
+                        remark += ' · %s分' % score
+                    elif sub:
+                        remark += ' · ' + str(sub)[:18]
 
-                out.append({
-                    'vod_id': 'radar|douban|%s|%s' % (quote(title, safe=''), did),
-                    'vod_name': title,
-                    'vod_pic': cover,
-                    'vod_remarks': remark
-                })
+                    did = str(x.get('id') or rank)
+                    out.append({
+                        'vod_id': 'radar|douban|%s|%s' % (quote(title, safe=''), did),
+                        'vod_name': title,
+                        'vod_pic': cover,
+                        'vod_remarks': remark
+                    })
 
-            return out
+                    if len(out) >= MAX_ITEMS:
+                        return out
+
+                if len(rows) < count:
+                    break
+
+            return out[:MAX_ITEMS]
 
         return self._cached('db_' + collection, 1800, load)
 
-    @staticmethod
-    def _retag(rows, label):
-        out = []
-        for i, x in enumerate(rows or [], 1):
-            y = dict(x)
-            old = str(y.get('vod_remarks') or '')
-            old = re.sub(r'^#\d+\s*·?\s*', '', old).strip()
-            y['vod_remarks'] = '#%d · %s%s' % (
-                i,
-                label,
-                (' · ' + old if old else '')
+    # -------------------- 各榜單資料 --------------------
+    def _rows_for(self, tid, rank):
+        rank = rank or 'hot'
+
+        short_search = self._duanju_baike('reso.html')
+        short_hot = self._duanju_baike('rebo.html')
+        short_pop = self._duanju_baike('shoucang.html')
+        daily_all = self._short_rank('all')
+        ai_pool = self._short_rank('ai')
+        manhua_pool = self._short_rank('manhua')
+
+        if tid == 'ai_short':
+            if rank == 'hot':
+                return self._retag(ai_pool, '熱播')
+            if rank == 'search':
+                return self._intersect_titles(short_search, ai_pool, '熱搜')
+            if rank == 'pop':
+                return self._retag(ai_pool, '人氣')
+            if rank == 'update':
+                return self._retag(ai_pool, '最近更新')
+            return self._intersect_titles(short_hot, ai_pool, '飆升榜')
+
+        if tid == 'ai_manhua':
+            hot = self._duanju_baike('manjurebo.html') or manhua_pool
+            if rank == 'hot':
+                return self._retag(hot, '熱播')
+            if rank == 'search':
+                return self._intersect_titles(short_search, manhua_pool or hot, '熱搜')
+            if rank == 'pop':
+                return self._retag(manhua_pool or hot, '人氣')
+            if rank == 'update':
+                return self._retag(manhua_pool or hot, '最近更新')
+            return self._intersect_titles(short_hot, manhua_pool or hot, '飆升榜')
+
+        if tid == 'short':
+            if rank == 'hot':
+                return self._retag(short_hot, '熱播')
+            if rank == 'search':
+                return self._retag(short_search, '熱搜')
+            if rank == 'pop':
+                return self._retag(short_pop, '人氣')
+            if rank == 'update':
+                return self._retag(daily_all or short_hot, '最近更新')
+            return self._retag(
+                self._unique(short_search + short_hot)[:MAX_ITEMS],
+                '飆升榜'
             )
-            out.append(y)
-        return out
 
-    def _intersect_titles(self, ranked_rows, pool_rows, label):
-        names = set()
-        for x in pool_rows or []:
-            n = re.sub(r'\s+', '', str(x.get('vod_name') or ''))
-            if n:
-                names.add(n)
+        if tid == 'guoman':
+            lab = {
+                'hot': '熱播', 'search': '熱搜', 'pop': '人氣',
+                'update': '最近更新', 'rising': '飆升榜'
+            }.get(rank, '熱播')
+            return self._retag(self._guoman_rank(), lab)
 
-        out = []
-        for x in ranked_rows or []:
-            n = re.sub(r'\s+', '', str(x.get('vod_name') or ''))
-            if n in names:
-                out.append(dict(x))
+        # 豆瓣 collection：有獨立 collection 就分開，沒有就保持同類資料但不同標示。
+        if tid == 'movie':
+            coll = {
+                'hot': 'movie_hot_gaia',
+                'search': 'movie_showing',
+                'pop': 'movie_hot_gaia',
+                'update': 'movie_showing',
+                'rising': 'movie_hot_gaia'
+            }.get(rank, 'movie_hot_gaia')
+        elif tid == 'tv':
+            coll = {
+                'hot': 'tv_hot',
+                'search': 'tv_domestic',
+                'pop': 'tv_hot',
+                'update': 'tv_domestic',
+                'rising': 'tv_hot'
+            }.get(rank, 'tv_hot')
+        elif tid == 'anime':
+            coll = 'tv_animation'
+        else:
+            return []
 
-        if len(out) < 3:
-            out = list(pool_rows or [])
+        lab = {
+            'hot': '熱播', 'search': '熱搜', 'pop': '人氣',
+            'update': '最近更新', 'rising': '飆升榜'
+        }.get(rank, '熱播')
+        return self._retag(self._douban(coll), lab)
 
-        return self._retag(out, label)
-
+    # -------------------- 分頁：每頁 30，最多 100 --------------------
     def categoryContent(self, tid, pg=1, filter=False, extend=None):
         try:
             page = max(1, int(pg or 1))
         except Exception:
             page = 1
 
-        if page > 1:
-            return {
-                'list': [],
-                'page': page,
-                'pagecount': 1,
-                'limit': 0,
-                'total': 0
-            }
+        ext = extend if isinstance(extend, dict) else {}
+        rank = str(ext.get('rank') or 'hot')
 
-        tid = str(tid)
+        rows = self._unique(self._rows_for(str(tid), rank), MAX_ITEMS)
+        total = min(len(rows), MAX_ITEMS)
+        pagecount = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
 
-        short_search = self._duanju_baike('reso.html')
-        ai_pool = self._short_rank('ai')
-        manhua_pool = self._short_rank('manhua')
-
-        if tid == 'ai_short_hot':
-            rows = self._retag(ai_pool, '熱播')
-        elif tid == 'ai_short_pop':
-            rows = self._retag(ai_pool, '人氣')
-        elif tid == 'ai_short_search':
-            rows = self._intersect_titles(short_search, ai_pool, '熱搜')
-
-        elif tid == 'ai_manhua_hot':
-            rows = self._retag(
-                self._duanju_baike('manjurebo.html') or manhua_pool,
-                '熱播'
-            )
-        elif tid == 'ai_manhua_pop':
-            rows = self._retag(
-                manhua_pool or self._duanju_baike('manjurebo.html'),
-                '人氣'
-            )
-        elif tid == 'ai_manhua_search':
-            rows = self._intersect_titles(
-                short_search,
-                manhua_pool or self._duanju_baike('manjurebo.html'),
-                '熱搜'
-            )
-
-        elif tid == 'short_hot':
-            rows = self._retag(self._duanju_baike('rebo.html'), '熱播')
-        elif tid == 'short_pop':
-            rows = self._retag(self._duanju_baike('shoucang.html'), '人氣')
-        elif tid == 'short_search':
-            rows = self._retag(short_search, '熱搜')
-
-        elif tid in ('guoman_hot', 'guoman_pop', 'guoman_search'):
-            lab = {
-                'guoman_hot': '熱播',
-                'guoman_pop': '人氣',
-                'guoman_search': '熱搜'
-            }[tid]
-            rows = self._retag(self._guoman_rank(), lab)
-
-        elif tid == 'movie_hot':
-            rows = self._retag(self._douban('movie_hot_gaia', movie_only=True), '熱播')
-        elif tid == 'movie_pop':
-            rows = self._retag(self._douban('movie_hot_gaia', movie_only=True), '人氣')
-        elif tid == 'movie_search':
-            rows = self._retag(
-                self._douban('movie_showing', movie_only=True) or self._douban('movie_hot_gaia', movie_only=True),
-                '熱搜'
-            )
-
-        elif tid == 'tv_hot':
-            rows = self._retag(self._douban('tv_hot'), '熱播')
-        elif tid == 'tv_pop':
-            rows = self._retag(self._douban('tv_hot'), '人氣')
-        elif tid == 'tv_search':
-            rows = self._retag(
-                self._douban('tv_domestic') or self._douban('tv_hot'),
-                '熱搜'
-            )
-
-        elif tid == 'anime_hot':
-            rows = self._retag(self._douban('tv_animation'), '熱播')
-        elif tid == 'anime_pop':
-            rows = self._retag(self._douban('tv_animation'), '人氣')
-        elif tid == 'anime_search':
-            rows = self._retag(self._douban('tv_animation'), '熱搜')
-
+        if page > pagecount:
+            page_rows = []
         else:
-            rows = []
+            start = (page - 1) * PAGE_SIZE
+            end = min(start + PAGE_SIZE, total)
+            page_rows = rows[start:end]
 
         return {
-            'list': rows,
-            'page': 1,
-            'pagecount': 1,
-            'limit': len(rows),
-            'total': len(rows)
+            'list': page_rows,
+            'page': page,
+            'pagecount': pagecount,
+            'limit': PAGE_SIZE,
+            'total': total
         }
 
     # 雷達不參與全域搜尋
@@ -673,7 +660,6 @@ class Spider(Spider):
     def detailContent(self, ids):
         raw = str(ids[0] if isinstance(ids, (list, tuple)) else ids or '')
         parts = raw.split('|')
-
         if len(parts) < 4:
             return {'list': []}
 
@@ -697,6 +683,3 @@ class Spider(Spider):
 
     def playerContent(self, flag, id, vipFlags=None):
         return {'parse': 1, 'jx': 0, 'url': ''}
-
-    def localProxy(self, param):
-        return None
