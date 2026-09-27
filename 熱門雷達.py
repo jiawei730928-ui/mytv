@@ -3,13 +3,13 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-27 測試版
+2026-09-27 實機修正版
 - 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
 - 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
 - 每個第二層最多 100 筆
 - 每頁 30 筆：1~30 / 31~60 / 61~90 / 91~100
 - 資料源不足 100 筆時顯示實際筆數，不硬湊
-- 保留愛米3已成功的豆瓣海報處理：cover_url -> pic -> cover + Header
+- 保留愛米3已成功的豆瓣海報處理：cover_url -> pic -> cover + Header\n- 修正短劇工程 AI短劇 / AI漫劇部分封面抓不到的問題
 """
 
 import sys, re, json, html, time, base64, hashlib, hmac
@@ -317,9 +317,35 @@ class Spider(Spider):
                 if not title or len(title) < 2:
                     continue
 
-                end = pats[idx + 1].start() if idx + 1 < len(pats) else min(len(text), m.end() + 1200)
-                tail = text[m.end():min(end, m.end() + 1200)]
+                end = pats[idx + 1].start() if idx + 1 < len(pats) else min(len(text), m.end() + 1600)
+                tail = text[m.end():min(end, m.end() + 1600)]
                 around = block + tail
+
+                # 短劇工程有些封面不在 <a> 內，而是在連結前面的相鄰區塊。
+                # 愛米3實機若只抓 block，AI短劇 / AI漫劇會大量退回彩色文字方塊。
+                if not pic:
+                    pre = text[max(0, m.start() - 1400):m.start()]
+                    ims = list(re.finditer(r'<img\b([^>]*)>', pre, re.I | re.S))
+                    if ims:
+                        tag = ims[-1].group(1)
+                        pic = (
+                            self._attr(tag, 'src')
+                            or self._attr(tag, 'data-src')
+                            or self._attr(tag, 'data-original')
+                            or self._attr(tag, 'data-lazy-src')
+                        )
+
+                # 再補抓標題後方的圖片。
+                if not pic:
+                    im2 = re.search(r'<img\b([^>]*)>', around, re.I | re.S)
+                    if im2:
+                        tag = im2.group(1)
+                        pic = (
+                            self._attr(tag, 'src')
+                            or self._attr(tag, 'data-src')
+                            or self._attr(tag, 'data-original')
+                            or self._attr(tag, 'data-lazy-src')
+                        )
 
                 kind = ''
                 for k in ('AI短剧', 'AI短劇', '漫剧', '漫劇', '真人剧', '真人劇'):
