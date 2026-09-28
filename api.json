@@ -369,6 +369,15 @@
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
-    }
+    },
+    {
+  "key": "qimao_test",
+  "name": "🧪🐱七貓｜短劇·漫劇｜待測",
+  "type": 3,
+  "api": "./七貓.py",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 1
+}
   ]
 }
