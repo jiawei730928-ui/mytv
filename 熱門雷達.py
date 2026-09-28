@@ -3,14 +3,14 @@
 熱門雷達 - WebHTV / FongMi T3 Python Spider
 用途：只做「現在紅什麼」的榜單雷達，不負責播放。
 
-2026-09-27 第二層榜單自檢修正版
+2026-09-28 AI短劇_AI漫劇真榜單V3
 - 第一層：AI短劇 / AI漫劇 / 短劇 / 國漫 / 動漫 / 電影 / 電視劇
 - 第二層：熱播 / 熱搜 / 人氣 / 最近更新 / 飆升榜
 - 每個第二層最多 100 筆
 - 每頁 30 筆：1~30 / 31~60 / 61~90 / 91~100
 - 資料源不足 100 筆時顯示實際筆數，不硬湊
 - 保留愛米3已成功的豆瓣海報處理：cover_url -> pic -> cover + Header\n- 修正短劇工程 AI短劇 / AI漫劇部分封面抓不到的問題
-- AI短劇/AI漫劇：改成模糊標題交集，降低因括號/季數/簡繁造成的空榜
+- AI短劇/AI漫劇：真榜單V3；不補數量、不用熱播池回填；更新只收新劇/新上榜，飆升只收▲N
 - 國漫/動漫：移除需要 SESSDATA 的劇集索引，改用匿名公開排行榜 + 公開統計欄位
 - 熱搜若無真實片名命中，明確標示「熱搜參考」，避免空白也不假裝官方熱搜
 """
@@ -121,6 +121,9 @@ class Spider(Spider):
             y = dict(x)
             old = str(y.get('vod_remarks') or '')
             old = re.sub(r'^#\d+\s*·?\s*', '', old).strip()
+            label_pat = r'^(?:最近更新參考|熱搜參考|人氣參考|飆升參考|最近更新|飆升榜|熱播|熱搜|人氣)(?:\s*·\s*|\s*$)'
+            while old and re.match(label_pat, old):
+                old = re.sub(label_pat, '', old, count=1).strip()
             y['vod_remarks'] = '#%d · %s%s' % (
                 i, label, (' · ' + old if old else '')
             )
@@ -187,10 +190,28 @@ class Spider(Spider):
                 out.append(dict(x))
         return self._retag(self._unique(out), label)
 
-    def _fill_distinct(self, primary, fallback, label, min_items=12):
+    def _borrow_pics(self, rows, *sources):
+        pic_map = {}
+        for src in sources:
+            for x in src or []:
+                n = self._norm_title(x.get('vod_name'))
+                pic = str(x.get('vod_pic') or '').strip()
+                if n and pic and n not in pic_map:
+                    pic_map[n] = pic
+        out = []
+        for x in rows or []:
+            y = dict(x)
+            if not str(y.get('vod_pic') or '').strip():
+                n = self._norm_title(y.get('vod_name'))
+                if n in pic_map:
+                    y['vod_pic'] = pic_map[n]
+            out.append(y)
+        return out
+
+    def _fill_distinct(self, primary, fallback, label, min_items=30):
         """
-        真榜優先；不足時只用「另一個有意義的資料源」補位。
-        不會拿完全相同清單原封不動回填。
+        真榜優先；若真榜筆數不足，才用同類候選補到最多第一頁30筆。
+        補位不複製、不造假。
         """
         out = [dict(x) for x in (primary or [])]
         seen = {self._norm_title(x.get('vod_name')) for x in out}
@@ -203,6 +224,7 @@ class Spider(Spider):
                 seen.add(n)
                 if len(out) >= min_items:
                     break
+        out = self._borrow_pics(out, primary, fallback)
         return self._retag(self._unique(out), label)
 
     def _avoid_same(self, rows, reference_rows, label, compare_top=20):
@@ -514,7 +536,7 @@ class Spider(Spider):
             {"type_id": "tv",        "type_name": "📺電視劇"},
         ]
 
-        rank_values = [
+        common_rank_values = [
             {"n": "熱播",     "v": "hot"},
             {"n": "熱搜",     "v": "search"},
             {"n": "人氣",     "v": "pop"},
@@ -522,12 +544,32 @@ class Spider(Spider):
             {"n": "飆升榜",   "v": "rising"},
         ]
 
+        # AI短劇 / AI漫劇只保留有真實資料依據的三個榜。
+        # 不為了「看起來很多」硬開沒有獨立資料來源的榜。
+        ai_short_rank_values = [
+            {"n": "熱播",     "v": "hot"},
+            {"n": "最近更新", "v": "update"},
+            {"n": "飆升榜",   "v": "rising"},
+        ]
+        ai_manhua_rank_values = [
+            {"n": "熱播",     "v": "hot"},
+            {"n": "最近更新", "v": "update"},
+            {"n": "飆升榜",   "v": "rising"},
+        ]
+
         filters = {}
         for c in classes:
-            filters[c["type_id"]] = [{
+            cid = c["type_id"]
+            values = common_rank_values
+            if cid == "ai_short":
+                values = ai_short_rank_values
+            elif cid == "ai_manhua":
+                values = ai_manhua_rank_values
+
+            filters[cid] = [{
                 "key": "rank",
                 "name": "榜單",
-                "value": rank_values
+                "value": values
             }]
 
         return {"class": classes, "filters": filters if filter else filters}
@@ -733,11 +775,33 @@ class Spider(Spider):
                 if heat:
                     remark += ' · ' + heat
 
+                plain = self._txt(around)
+
+                # 短劇工程日榜「較前一日」
+                # 例：▲ 46 / ▼ 1 / 新
+                move = 0
+                mm = re.search(r'▲\s*(\d+)', plain)
+                if mm:
+                    try:
+                        move = int(mm.group(1))
+                    except Exception:
+                        move = 0
+
+                # 「新上榜」只認明確標記，避免片名本身含「新」被誤判。
+                is_new = bool(re.search(
+                    r'(?:新上榜|新進榜|新进榜|較前一日\s*(?:新|NEW)|较前一日\s*(?:新|NEW))',
+                    plain,
+                    re.I
+                ))
+
                 out.append({
                     'vod_id': 'radar|short|%s|%s' % (quote(title, safe=''), quote(href, safe='')),
                     'vod_name': title,
                     'vod_pic': pic,
                     'vod_remarks': remark,
+                    '_daily_rank': rank,
+                    '_move': move,
+                    '_is_new': 1 if is_new else 0,
                 })
 
                 if len(out) >= MAX_ITEMS:
@@ -943,61 +1007,83 @@ class Spider(Spider):
 
         if tid == 'ai_short':
             if rank == 'hot':
-                return self._retag(ai_pool, '熱播')
-            if rank == 'search':
-                real = self._strict_intersect(short_search, ai_pool, '熱搜')
-                filled = self._fill_distinct(real, self._strict_intersect(short_search, ai_pool[10:], '熱搜參考'), '熱搜')
-                return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '熱搜')
-            if rank == 'pop':
-                real = self._strict_intersect(short_pop, ai_pool, '人氣')
-                filled = self._fill_distinct(real, self._strict_intersect(short_pop, ai_pool[10:], '人氣參考'), '人氣')
-                return self._avoid_same(filled, self._retag(ai_pool, '熱播'), '人氣')
+                # 短劇工程 AI短劇日榜原始順序 = 真實熱播
+                return self._retag(self._unique(ai_pool), '熱播')
+
             if rank == 'update':
-                real = self._strict_intersect(short_new, ai_pool, '最近更新')
-                return self._fill_distinct(real, ai_pool, '最近更新')
-            # 飆升：以「熱播榜順序」去挑新劇，和「最近更新的新劇順序」自然分開
-            rising = self._strict_intersect(short_hot, short_new, '飆升榜')
-            rising = self._strict_intersect(rising, ai_pool, '飆升榜')
-            filled = self._fill_distinct(rising, ai_pool[10:], '飆升榜')
-            update_ref = self._fill_distinct(
-                self._strict_intersect(short_new, ai_pool, '最近更新'),
-                ai_pool,
-                '最近更新'
+                # 來源1：短劇百科新劇榜中，真正屬於 AI短劇日榜的作品
+                from_new_list = self._strict_intersect(short_new, ai_pool, '最近更新')
+
+                # 來源2：短劇工程日榜本身明確標示「新上榜」的 AI短劇
+                from_new_badge = [
+                    dict(x) for x in ai_pool
+                    if int(x.get('_is_new') or 0) == 1
+                ]
+
+                # 只合併真實新片訊號，不拿熱播池回填。
+                rows = self._unique(list(from_new_list) + from_new_badge)
+                rows = self._borrow_pics(rows, short_new, ai_pool)
+                return self._retag(rows, '最近更新')
+
+            # 飆升榜：只收短劇工程「較前一日 ▲N」真正上升的 AI短劇
+            rising = [
+                dict(x) for x in ai_pool
+                if int(x.get('_move') or 0) > 0
+            ]
+            rising.sort(
+                key=lambda x: (
+                    int(x.get('_move') or 0),
+                    -int(x.get('_daily_rank') or 999)
+                ),
+                reverse=True
             )
-            return self._avoid_same(filled, update_ref, '飆升榜')
+            for x in rising:
+                mv = int(x.get('_move') or 0)
+                if mv > 0:
+                    old = str(x.get('vod_remarks') or '')
+                    x['vod_remarks'] = old + (' · ▲%d' % mv)
+            return self._retag(self._unique(rising), '飆升榜')
 
         if tid == 'ai_manhua':
             hot_pool = manhua_hot or manhua_daily
+
             if rank == 'hot':
-                return self._retag(hot_pool, '熱播')
-            if rank == 'search':
-                real = self._strict_intersect(short_search, hot_pool, '熱搜')
-                return self._fill_distinct(real, manhua_daily, '熱搜')
-            if rank == 'pop':
-                real = self._strict_intersect(short_pop, hot_pool, '人氣')
-                metric = self._sort_metric(hot_pool, '_fav', '人氣參考')
-                filled = self._fill_distinct(real, metric, '人氣')
-                return self._avoid_same(filled, self._retag(hot_pool, '熱播'), '人氣')
+                # 短劇百科「漫劇熱播榜」原始順序
+                return self._retag(self._unique(hot_pool), '熱播')
+
             if rank == 'update':
-                return self._fill_distinct(
-                    self._retag(manhua_new, '最近更新'),
-                    manhua_daily,
-                    '最近更新'
-                )
-            # 熱播順序中挑出新劇；若仍與熱播太像，先拉開，再和最近更新比較一次
-            real = self._strict_intersect(hot_pool, manhua_new, '飆升榜')
-            filled = self._fill_distinct(real, hot_pool[10:], '飆升榜')
-            filled = self._avoid_same(
-                filled,
-                self._retag(hot_pool, '熱播'),
-                '飆升榜'
+                # 來源1：短劇百科「漫劇新劇榜」
+                from_new_list = [dict(x) for x in (manhua_new or [])]
+
+                # 來源2：短劇工程日榜中明確標示「新上榜」的漫劇
+                from_new_badge = [
+                    dict(x) for x in manhua_daily
+                    if int(x.get('_is_new') or 0) == 1
+                ]
+
+                # 只合併真實新片訊號，不拿熱播池或日榜其它作品補數量。
+                rows = self._unique(from_new_list + from_new_badge)
+                rows = self._borrow_pics(rows, manhua_new, manhua_daily, hot_pool)
+                return self._retag(rows, '最近更新')
+
+            # 飆升榜：只收短劇工程日榜中「較前一日 ▲N」真正上升的漫劇
+            rising = [
+                dict(x) for x in manhua_daily
+                if int(x.get('_move') or 0) > 0
+            ]
+            rising.sort(
+                key=lambda x: (
+                    int(x.get('_move') or 0),
+                    -int(x.get('_daily_rank') or 999)
+                ),
+                reverse=True
             )
-            update_ref = self._fill_distinct(
-                self._retag(manhua_new, '最近更新'),
-                manhua_daily,
-                '最近更新'
-            )
-            return self._avoid_same(filled, update_ref, '飆升榜')
+            for x in rising:
+                mv = int(x.get('_move') or 0)
+                if mv > 0:
+                    old = str(x.get('vod_remarks') or '')
+                    x['vod_remarks'] = old + (' · ▲%d' % mv)
+            return self._retag(self._unique(rising), '飆升榜')
 
         if tid == 'short':
             if rank == 'hot':
@@ -1067,27 +1153,67 @@ class Spider(Spider):
 
     # -------------------- 分頁：每頁 30，最多 100 --------------------
     def categoryContent(self, tid, pg=1, filter=False, extend=None):
-        try:
-            page = max(1, int(pg or 1))
-        except Exception:
-            page = 1
-
+        raw_tid = str(tid or '')
         ext = extend if isinstance(extend, dict) else {}
         rank = str(ext.get('rank') or 'hot')
 
-        rows = self._unique(self._rows_for(str(tid), rank), MAX_ITEMS)
+        if raw_tid.startswith('radarnav|'):
+            parts = raw_tid.split('|')
+            if len(parts) >= 4:
+                raw_tid = parts[1]
+                rank = parts[2]
+                try:
+                    page = max(1, int(parts[3]))
+                except Exception:
+                    page = 1
+            else:
+                page = 1
+        else:
+            try:
+                page = max(1, int(pg or 1))
+            except Exception:
+                page = 1
+
+        rows = self._unique(self._rows_for(raw_tid, rank), MAX_ITEMS)
         total = min(len(rows), MAX_ITEMS)
         pagecount = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
-
         if page > pagecount:
-            page_rows = []
-        else:
-            start = (page - 1) * PAGE_SIZE
-            end = min(start + PAGE_SIZE, total)
-            page_rows = rows[start:end]
+            page = pagecount
+
+        start = (page - 1) * PAGE_SIZE
+        end = min(start + PAGE_SIZE, total)
+        page_rows = rows[start:end]
+
+        nav = []
+        if page > 1:
+            nav.append({
+                'vod_id': 'radarnav|%s|%s|1' % (raw_tid, rank),
+                'vod_name': '⏮ 回頁首',
+                'vod_pic': '',
+                'vod_tag': 'folder',
+                'vod_remarks': '第 1 / %d 頁' % pagecount,
+                'land': 1
+            })
+            nav.append({
+                'vod_id': 'radarnav|%s|%s|%d' % (raw_tid, rank, page - 1),
+                'vod_name': '◀ 上一頁',
+                'vod_pic': '',
+                'vod_tag': 'folder',
+                'vod_remarks': '第 %d / %d 頁' % (page - 1, pagecount),
+                'land': 1
+            })
+        if page < pagecount:
+            nav.append({
+                'vod_id': 'radarnav|%s|%s|%d' % (raw_tid, rank, page + 1),
+                'vod_name': '下一頁 ▶',
+                'vod_pic': '',
+                'vod_tag': 'folder',
+                'vod_remarks': '第 %d / %d 頁' % (page + 1, pagecount),
+                'land': 1
+            })
 
         return {
-            'list': page_rows,
+            'list': page_rows + nav,
             'page': page,
             'pagecount': pagecount,
             'limit': PAGE_SIZE,
@@ -1103,6 +1229,8 @@ class Spider(Spider):
 
     def detailContent(self, ids):
         raw = str(ids[0] if isinstance(ids, (list, tuple)) else ids or '')
+        if raw.startswith('radarnav|'):
+            return {'list': []}
         parts = raw.split('|')
         if len(parts) < 4:
             return {'list': []}
