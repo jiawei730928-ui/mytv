@@ -371,22 +371,31 @@
       "filterable": 1
     },
     {
-  "key": "qimao_test",
-  "name": "🧪🐱七貓｜短劇·漫劇｜待測",
-  "type": 3,
-  "api": "./七貓.py",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 1
-},
+      "key": "qimao_test",
+      "name": "🧪🐱七貓｜短劇·漫劇｜待測",
+      "type": 3,
+      "api": "./七貓.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
     {
-  "key": "hongguo_official_test",
-  "name": "🧪🍅正版紅果短劇｜待測",
-  "type": 3,
-  "api": "./2正版红果短剧20261001.py",
-  "searchable": 1,
-  "quickSearch": 1,
-  "filterable": 1
-}
+      "key": "99duanju_test",
+      "name": "🧪🎬99短劇網｜待測",
+      "type": 3,
+      "api": "./99短劇網.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "hongguo_official_test",
+      "name": "🧪🍅正版紅果短劇｜待測",
+      "type": 3,
+      "api": "./2正版红果短剧20261001.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }
   ]
 }
