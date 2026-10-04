@@ -380,7 +380,7 @@
       "filterable": 1
     },
     {
-      "key": "99duanju_test",
+      "key": "duanju99_custom",
       "name": "🧪🎬99短劇網｜待測",
       "type": 3,
       "api": "./99短劇網.py",
@@ -393,6 +393,1248 @@
       "name": "🧪🍅正版紅果短劇｜待測",
       "type": 3,
       "api": "./2正版红果短剧20261001.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_001",
+      "name": "🧪275听书",
+      "type": 3,
+      "api": "./275听书.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_002",
+      "name": "🧪30剧集网",
+      "type": 3,
+      "api": "./30剧集网.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_003",
+      "name": "🧪55影院",
+      "type": 3,
+      "api": "./55影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_004",
+      "name": "🧪6080影视",
+      "type": 3,
+      "api": "./6080影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_005",
+      "name": "🧪6080新视觉",
+      "type": 3,
+      "api": "./6080新视觉.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_006",
+      "name": "🧪66大片网",
+      "type": 3,
+      "api": "./66大片网.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_007",
+      "name": "🧪808影院",
+      "type": 3,
+      "api": "./808影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_008",
+      "name": "🧪99短剧网",
+      "type": 3,
+      "api": "./99短剧网.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_009",
+      "name": "🧪ASMR吧",
+      "type": 3,
+      "api": "./ASMR吧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_010",
+      "name": "🧪CNFLIX",
+      "type": 3,
+      "api": "./CNFLIX.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_011",
+      "name": "🧪DJ呦呦",
+      "type": 3,
+      "api": "./DJ呦呦.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_012",
+      "name": "🧪FoFo影院",
+      "type": 3,
+      "api": "./FoFo影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_013",
+      "name": "🧪ik4k影院",
+      "type": 3,
+      "api": "./ik4k影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_014",
+      "name": "🧪LIBVIO",
+      "type": 3,
+      "api": "./LIBVIO.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_015",
+      "name": "🧪MiFun动漫",
+      "type": 3,
+      "api": "./MiFun动漫.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_016",
+      "name": "🧪pomo",
+      "type": 3,
+      "api": "./pomo.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_017",
+      "name": "🧪vidhub",
+      "type": 3,
+      "api": "./vidhub.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_018",
+      "name": "🧪VS影院",
+      "type": 3,
+      "api": "./VS影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_019",
+      "name": "🧪ZIP0影视",
+      "type": 3,
+      "api": "./ZIP0影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_020",
+      "name": "🧪一起影视",
+      "type": 3,
+      "api": "./一起影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_021",
+      "name": "🧪七味",
+      "type": 3,
+      "api": "./七味.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_022",
+      "name": "🧪云朵视频",
+      "type": 3,
+      "api": "./云朵视频.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_023",
+      "name": "🧪仙腾影院",
+      "type": 3,
+      "api": "./仙腾影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_024",
+      "name": "🧪低端影视",
+      "type": 3,
+      "api": "./低端影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_025",
+      "name": "🧪兄弟影视",
+      "type": 3,
+      "api": "./兄弟影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_026",
+      "name": "🧪兔岛影院",
+      "type": 3,
+      "api": "./兔岛影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_027",
+      "name": "🧪八天电影",
+      "type": 3,
+      "api": "./八天电影.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_028",
+      "name": "🧪八度影院",
+      "type": 3,
+      "api": "./八度影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_029",
+      "name": "🧪八戒影视",
+      "type": 3,
+      "api": "./八戒影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_030",
+      "name": "🧪共和国动漫",
+      "type": 3,
+      "api": "./共和国动漫.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_031",
+      "name": "🧪共青春",
+      "type": 3,
+      "api": "./共青春.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_032",
+      "name": "🧪农民影视",
+      "type": 3,
+      "api": "./农民影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_033",
+      "name": "🧪初见影视",
+      "type": 3,
+      "api": "./初见影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_034",
+      "name": "🧪刷不停短剧",
+      "type": 3,
+      "api": "./刷不停短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_035",
+      "name": "🧪剧OK",
+      "type": 3,
+      "api": "./剧OK.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_036",
+      "name": "🧪剧下饭4K",
+      "type": 3,
+      "api": "./剧下饭4K.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_037",
+      "name": "🧪动漫巴士",
+      "type": 3,
+      "api": "./动漫巴士.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_038",
+      "name": "🧪努努影院",
+      "type": 3,
+      "api": "./努努影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_039",
+      "name": "🧪千千音乐",
+      "type": 3,
+      "api": "./千千音乐.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_040",
+      "name": "🧪华谊影视",
+      "type": 3,
+      "api": "./华谊影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_041",
+      "name": "🧪厂长影视",
+      "type": 3,
+      "api": "./厂长影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_042",
+      "name": "🧪厂长资源",
+      "type": 3,
+      "api": "./厂长资源.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_043",
+      "name": "🧪君念影院",
+      "type": 3,
+      "api": "./君念影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_044",
+      "name": "🧪咕噜咕噜",
+      "type": 3,
+      "api": "./咕噜咕噜.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_045",
+      "name": "🧪咖啡直播",
+      "type": 3,
+      "api": "./咖啡直播.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_046",
+      "name": "🧪咸鱼影视",
+      "type": 3,
+      "api": "./咸鱼影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_047",
+      "name": "🧪哔哩直播",
+      "type": 3,
+      "api": "./哔哩直播.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_048",
+      "name": "🧪喜福短剧",
+      "type": 3,
+      "api": "./喜福短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_049",
+      "name": "🧪嘀嗒影视",
+      "type": 3,
+      "api": "./嘀嗒影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_050",
+      "name": "🧪在线短剧",
+      "type": 3,
+      "api": "./在线短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_051",
+      "name": "🧪夏日影院",
+      "type": 3,
+      "api": "./夏日影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_052",
+      "name": "🧪多多影视",
+      "type": 3,
+      "api": "./多多影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_053",
+      "name": "🧪多瑙影院",
+      "type": 3,
+      "api": "./多瑙影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_054",
+      "name": "🧪大白鲨影院",
+      "type": 3,
+      "api": "./大白鲨影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_055",
+      "name": "🧪大象短剧",
+      "type": 3,
+      "api": "./大象短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_056",
+      "name": "🧪大马猴",
+      "type": 3,
+      "api": "./大马猴.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_057",
+      "name": "🧪奇优影院",
+      "type": 3,
+      "api": "./奇优影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_058",
+      "name": "🧪奇点影视",
+      "type": 3,
+      "api": "./奇点影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_059",
+      "name": "🧪好剧屋",
+      "type": 3,
+      "api": "./好剧屋.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_060",
+      "name": "🧪威视TV",
+      "type": 3,
+      "api": "./威视TV.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_061",
+      "name": "🧪山水影视",
+      "type": 3,
+      "api": "./山水影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_062",
+      "name": "🧪开心影院",
+      "type": 3,
+      "api": "./开心影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_063",
+      "name": "🧪开心短剧",
+      "type": 3,
+      "api": "./开心短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_064",
+      "name": "🧪开端影视",
+      "type": 3,
+      "api": "./开端影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_065",
+      "name": "🧪影子音乐",
+      "type": 3,
+      "api": "./影子音乐.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_066",
+      "name": "🧪悟圣短剧",
+      "type": 3,
+      "api": "./悟圣短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_067",
+      "name": "🧪悟空影视",
+      "type": 3,
+      "api": "./悟空影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_068",
+      "name": "🧪悦听吧",
+      "type": 3,
+      "api": "./悦听吧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_069",
+      "name": "🧪手机影院",
+      "type": 3,
+      "api": "./手机影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_070",
+      "name": "🧪搜剧AI",
+      "type": 3,
+      "api": "./搜剧AI.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_071",
+      "name": "🧪无极电影)",
+      "type": 3,
+      "api": "./无极电影).py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_072",
+      "name": "🧪易听书网",
+      "type": 3,
+      "api": "./易听书网.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_073",
+      "name": "🧪星梦Asmr",
+      "type": 3,
+      "api": "./星梦Asmr.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_074",
+      "name": "🧪星芽短剧",
+      "type": 3,
+      "api": "./星芽短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_075",
+      "name": "🧪星辰影院",
+      "type": 3,
+      "api": "./星辰影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_076",
+      "name": "🧪映刻短剧",
+      "type": 3,
+      "api": "./映刻短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_077",
+      "name": "🧪未来影院",
+      "type": 3,
+      "api": "./未来影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_078",
+      "name": "🧪果果短剧",
+      "type": 3,
+      "api": "./果果短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_079",
+      "name": "🧪枝枝影视",
+      "type": 3,
+      "api": "./枝枝影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_080",
+      "name": "🧪枫叶4K",
+      "type": 3,
+      "api": "./枫叶4K.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_081",
+      "name": "🧪枫叶影院",
+      "type": 3,
+      "api": "./枫叶影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_082",
+      "name": "🧪枫叶音乐",
+      "type": 3,
+      "api": "./枫叶音乐.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_083",
+      "name": "🧪樱之空动漫",
+      "type": 3,
+      "api": "./樱之空动漫.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_084",
+      "name": "🧪橘汁视频",
+      "type": 3,
+      "api": "./橘汁视频.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_085",
+      "name": "🧪毒舌影视",
+      "type": 3,
+      "api": "./毒舌影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_086",
+      "name": "🧪毒舌短剧",
+      "type": 3,
+      "api": "./毒舌短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_087",
+      "name": "🧪河马剧场",
+      "type": 3,
+      "api": "./河马剧场.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_088",
+      "name": "🧪泡泡影院",
+      "type": 3,
+      "api": "./泡泡影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_089",
+      "name": "🧪泥视频",
+      "type": 3,
+      "api": "./泥视频.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_090",
+      "name": "🧪热播APP",
+      "type": 3,
+      "api": "./热播APP.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_091",
+      "name": "🧪熊猫直播",
+      "type": 3,
+      "api": "./熊猫直播.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_092",
+      "name": "🧪爱看机器人",
+      "type": 3,
+      "api": "./爱看机器人.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_093",
+      "name": "🧪独播库",
+      "type": 3,
+      "api": "./独播库.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_094",
+      "name": "🧪瓜子APP",
+      "type": 3,
+      "api": "./瓜子APP.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_095",
+      "name": "🧪电影侠",
+      "type": 3,
+      "api": "./电影侠.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_096",
+      "name": "🧪白洋影院",
+      "type": 3,
+      "api": "./白洋影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_097",
+      "name": "🧪百花影院",
+      "type": 3,
+      "api": "./百花影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_098",
+      "name": "🧪看剧AI",
+      "type": 3,
+      "api": "./看剧AI.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_099",
+      "name": "🧪看戏影视",
+      "type": 3,
+      "api": "./看戏影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_100",
+      "name": "🧪真狼影视",
+      "type": 3,
+      "api": "./真狼影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_101",
+      "name": "🧪短剧大全",
+      "type": 3,
+      "api": "./短剧大全.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_102",
+      "name": "🧪短剧巴士",
+      "type": 3,
+      "api": "./短剧巴士.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_103",
+      "name": "🧪石榴短剧",
+      "type": 3,
+      "api": "./石榴短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_104",
+      "name": "🧪第七影院",
+      "type": 3,
+      "api": "./第七影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_105",
+      "name": "🧪第九短剧",
+      "type": 3,
+      "api": "./第九短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_106",
+      "name": "🧪红豆短剧",
+      "type": 3,
+      "api": "./红豆短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_107",
+      "name": "🧪网飞TV",
+      "type": 3,
+      "api": "./网飞TV.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_108",
+      "name": "🧪网飞猫",
+      "type": 3,
+      "api": "./网飞猫.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_109",
+      "name": "🧪美剧天堂",
+      "type": 3,
+      "api": "./美剧天堂.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_110",
+      "name": "🧪聚合直播",
+      "type": 3,
+      "api": "./聚合直播.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_111",
+      "name": "🧪芭蕉剧场",
+      "type": 3,
+      "api": "./芭蕉剧场.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_112",
+      "name": "🧪茶杯狐",
+      "type": 3,
+      "api": "./茶杯狐.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_113",
+      "name": "🧪草莓影视",
+      "type": 3,
+      "api": "./草莓影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_114",
+      "name": "🧪蚕驰短剧",
+      "type": 3,
+      "api": "./蚕驰短剧.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_115",
+      "name": "🧪蝶卡影视",
+      "type": 3,
+      "api": "./蝶卡影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_116",
+      "name": "🧪袋鼠影视",
+      "type": 3,
+      "api": "./袋鼠影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_117",
+      "name": "🧪观风影视",
+      "type": 3,
+      "api": "./观风影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_118",
+      "name": "🧪视觉影院",
+      "type": 3,
+      "api": "./视觉影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_119",
+      "name": "🧪豆花影视",
+      "type": 3,
+      "api": "./豆花影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_120",
+      "name": "🧪追光影视",
+      "type": 3,
+      "api": "./追光影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_121",
+      "name": "🧪追剧达人",
+      "type": 3,
+      "api": "./追剧达人.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_122",
+      "name": "🧪追影",
+      "type": 3,
+      "api": "./追影.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_123",
+      "name": "🧪酷我音乐",
+      "type": 3,
+      "api": "./酷我音乐.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_124",
+      "name": "🧪采集聚合",
+      "type": 3,
+      "api": "./采集聚合.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_125",
+      "name": "🧪金牌APP",
+      "type": 3,
+      "api": "./金牌APP.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_126",
+      "name": "🧪青牛影视",
+      "type": 3,
+      "api": "./青牛影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_127",
+      "name": "🧪青空次元",
+      "type": 3,
+      "api": "./青空次元.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_128",
+      "name": "🧪青蛙影视",
+      "type": 3,
+      "api": "./青蛙影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_129",
+      "name": "🧪韩小圈",
+      "type": 3,
+      "api": "./韩小圈.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_130",
+      "name": "🧪音乐聚合",
+      "type": 3,
+      "api": "./音乐聚合.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_131",
+      "name": "🧪飞牛影视",
+      "type": 3,
+      "api": "./飞牛影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_132",
+      "name": "🧪饭搭子影视",
+      "type": 3,
+      "api": "./饭搭子影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_133",
+      "name": "🧪骚火影视",
+      "type": 3,
+      "api": "./骚火影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_134",
+      "name": "🧪高清点播",
+      "type": 3,
+      "api": "./高清点播.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_135",
+      "name": "🧪魔法影视",
+      "type": 3,
+      "api": "./魔法影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_136",
+      "name": "🧪麒麟影视",
+      "type": 3,
+      "api": "./麒麟影视.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_137",
+      "name": "🧪麦田影院",
+      "type": 3,
+      "api": "./麦田影院.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "pack138_138",
+      "name": "🧪黑猫动漫",
+      "type": 3,
+      "api": "./黑猫动漫.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
