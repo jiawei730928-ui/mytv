@@ -1643,7 +1643,7 @@
       "key": "zhenguo_jian_test",
       "name": "🧪🍎真果•鑒｜待測",
       "type": 3,
-      "api": "./真果•鑒賞.py",
+      "api": "./真果•鑒.py",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1
