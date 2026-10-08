@@ -1656,6 +1656,15 @@
   "searchable": 1,
   "quickSearch": 1,
   "filterable": 1
+},
+    {
+  "key": "ysdjhj_test",
+  "name": "🧪影視短劇合輯｜待測",
+  "type": 3,
+  "api": "./影視短劇合輯.py",
+  "searchable": 1,
+  "quickSearch": 1,
+  "filterable": 1
 }
   ]
 }
