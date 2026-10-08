@@ -26,6 +26,14 @@ import json
 import re
 import ssl
 import time
+import sys
+
+sys.path.append('..')
+try:
+    from base.spider import Spider as BaseSpider
+except Exception:
+    class BaseSpider(object):
+        pass
 
 try:
     from urllib.request import Request, urlopen
@@ -1020,7 +1028,20 @@ def _play_str(eps):
 
 # ================================================================ 主类
 
-class Spider(object):
+class Spider(BaseSpider):
+
+    def getName(self):
+        return "影視短劇合輯"
+
+    def isVideoFormat(self, url):
+        u = str(url or "").lower()
+        return any(x in u for x in (".m3u8", ".mp4", ".flv", ".ts", ".mkv"))
+
+    def manualVideoCheck(self):
+        return False
+
+    def destroy(self):
+        return None
 
     def __init__(self):
         self.extend = ""
